@@ -3,20 +3,20 @@
 # input and output files
 input_file: 'input/input.xlsx'
 output_file: 'out.xlsx'
-number_of_cameras: 9 # short indexing format, aka index 3 corresponds to camera 5 and 6
+number_of_cameras: 9 # number of physical cameras, aka measure points 
 
 # all possible parameters to Počty vozidel sheet
 # all day (aka 00:00 -> 23:59) is created by default
 sheet_cars_count: 
-  time_a: # for more times just add new 'time_x' section
-    time_start: '04:50' # time format is HH:MM
-    time_end: '09:00'
+  time_a: 
+    time_start: '04:50' #inclusive, time format is HH:MM
+    time_end: '04:50' #inclusive
 
   time_b: # for more times just add new 'time_x' section
-    time_start: '03:00' # time format is HH:MM
+    time_start: '03:00' 
     time_end: '10:00'
   
-
+# there are no parameters for Počty průjezdů sheet
 
 # all possible parameters to Časové údaje sheet
 sheet_times: 

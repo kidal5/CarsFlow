@@ -19,8 +19,8 @@ if __name__ == '__main__':
         os.remove(params['output_file'])
 
     writer = pd.ExcelWriter(params['output_file'], engine='xlsxwriter')
-    createSheetNumberOfCars(df.copy(True), writer, params)
-    # createSheetNumberOfTravels(df.copy(True), writer)
+    # createSheetNumberOfCars(df.copy(True), writer, params)
+    createSheetNumberOfTravels(df.copy(True), writer, params)
     # createSheetTimes(df, writer, params)
 
 

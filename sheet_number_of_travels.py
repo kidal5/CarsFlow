@@ -3,44 +3,45 @@ import xlsxwriter.utility as xwu
 import pandas as pd
 
 
-def createSheetNumberOfTravels(df, xlsxWriter):
-    N = int(len(df['Place sheet name'].unique()) / 2)
+def createSheetNumberOfTravels(df, xlsxWriter, params):
+    N = params['number_of_cameras']
     sheet_name = 'Počty průjezdů'
 
     data, SPZs = computeData(df)
-    writeData(xlsxWriter, sheet_name, data)
-    writeTemplate(xlsxWriter, sheet_name, N, SPZs)
+    writeData(xlsxWriter, sheet_name, data, SPZs, N)
+    writeTemplate(xlsxWriter, sheet_name, data, SPZs, N)
 
 
 def computeData(df):
     dick = {
-        'Sheet name': [],
+        'Direction': [],
         'SPZ': [],
         'Count': []
     }
 
     # add fake column to be removed later, order of operations should be kept because SPZs ordering matter
-    for spz in range(1, 11):
-        dick['Sheet name'].append('remove me')
+    for spz in range(1, 11):  # always show atleast 10 SPZs
+        dick['Direction'].append('remove me')
         dick['SPZ'].append(spz)
         dick['Count'].append(0)
 
-    for sheet_name in df['Place sheet name'].unique():
-        temp = df[df['Place sheet name'] == sheet_name]
+    for direction in df['Direction'].unique():
+        temp = df[df['Direction'] == direction]
 
         # solve unknown spz
-        temp_unknown = temp[temp['License Plate Number'] == 'unknown']
-        dick['Sheet name'].append(sheet_name)
+        temp_unknown = temp[temp['License_plate'] == 'unknown']
+        dick['Direction'].append(direction)
         dick['SPZ'].append(9999)
         dick['Count'].append(len(temp_unknown))
 
         # solve correct spz
-        temp = temp[temp['License Plate Number'] != 'unknown']
-        temp = temp.groupby(by='License Plate Number').count().groupby(by='Capture Time').count()
+        temp = temp[temp['License_plate'] != 'unknown']
+        temp = temp.groupby(by='License_plate').count().groupby(by='Capture_time').count()
         temp = temp.reset_index()
 
-        for spz, count in zip(temp['Capture Time'], temp['Country']):
-            dick['Sheet name'].append(sheet_name)
+        # column names lost their oringal meaning...
+        for spz, count in zip(temp['Capture_time'], temp['Direction']):
+            dick['Direction'].append(direction)
             dick['SPZ'].append(spz)
             dick['Count'].append(count)
 
@@ -50,13 +51,13 @@ def computeData(df):
     SPZs = SPZs.tolist()
     SPZs[-1] = 'unknown'
 
-    out = out.pivot(index='SPZ', columns='Sheet name', values='Count').fillna(0)
+    out = out.pivot(index='SPZ', columns='Direction', values='Count').fillna(0)
     out = out.drop(columns=['remove me'])
 
     return out, SPZs
 
 
-def writeData(xlsxWriter, sheet_name, data):
+def writeData(xlsxWriter, sheet_name, data, SPZs, N):
     # Position the dataframes in the worksheet.
     data.to_excel(xlsxWriter, sheet_name=sheet_name, startrow=2, startcol=1, header=False, index=False)
 
@@ -73,14 +74,15 @@ def writeData(xlsxWriter, sheet_name, data):
         'text_wrap': True,
     })
 
-    # this should not be conditional formatting, but i could not found way hwo to do it properly...
-    worksheet.conditional_format('B3:I16', {'type': 'cell',
-                                            'criteria': 'greater than',
-                                            'value': -1,
-                                            'format': yellow_format})
+    # this should not be conditional formatting, but i could not found way how to do it properly...
+
+    worksheet.conditional_format(2, 1, len(SPZs) + 1, N * 2, {'type': 'cell',
+                                                              'criteria': 'greater than',
+                                                              'value': -1,
+                                                              'format': yellow_format})
 
 
-def writeTemplate(xlsxWriter, sheet_name, N, SPZs):
+def writeTemplate(xlsxWriter, sheet_name, data, SPZs, N):
     workbook = xlsxWriter.book
     worksheet = xlsxWriter.sheets[sheet_name]
 
@@ -140,24 +142,29 @@ def writeTemplate(xlsxWriter, sheet_name, N, SPZs):
 
         a = xwu.xl_col_to_name(1)
         b = xwu.xl_col_to_name(N * 2)
-        worksheet.write(2 + i, N * 2 + 1, f'=SUM({a}{3 + i}:{b}{3 + i})', second_line_format)
-
         c = xwu.xl_col_to_name(N * 2 + 1)
-        worksheet.write(2 + i, N * 2 + 2, f'={c}{3 + i}/${c}${len(SPZs) + 4}', percent_format)
 
-        worksheet.write(2 + i, N * 2 + 3, f'={c}{3 + i} / A{3 + i}', second_line_format)
-
-        # solve case wehn spz is unkown
+        # solve case when spz is unknown
         if spz == 'unknown':
+            worksheet.write(2 + i, N * 2 + 1, f'=SUM({a}{3 + i}:{b}{3 + i}) * 1', second_line_format)
+            worksheet.write(2 + i, N * 2 + 2, f'={c}{3 + i}/${c}${len(SPZs) + 4}', percent_format)
             worksheet.write(2 + i, N * 2 + 3, f'={c}{3 + i}', second_line_format)
+        else:
+            worksheet.write(2 + i, N * 2 + 1, f'=SUM({a}{3 + i}:{b}{3 + i}) * A{3 + i}', second_line_format)
+            worksheet.write(2 + i, N * 2 + 2, f'={c}{3 + i}/${c}${len(SPZs) + 4}', percent_format)
+            worksheet.write(2 + i, N * 2 + 3, f'={c}{3 + i} / A{3 + i}', second_line_format)
 
     # write last line
-    worksheet.write(len(SPZs) + 3, 0, "Celkový součet", second_line_format)
-    for i in range(N * 2 + 3):
+    worksheet.write(len(SPZs) + 3, 0, "Celkem [počet]", second_line_format)
+    for i in range(N * 2):
+        a = xwu.xl_col_to_name(i + 1)
+        worksheet.write(len(SPZs) + 3, i + 1, f'=SUMPRODUCT({a}{3}:{a}{len(SPZs) + 1},A{3}:A{len(SPZs) + 1}) + {a}{len(SPZs) + 2}', second_line_format)
+
+    for i in range(N * 2, N * 2 + 3):
         a = xwu.xl_col_to_name(i + 1)
 
         form = second_line_format
         if i == N * 2 + 1:
             form = percent_format
 
-        worksheet.write(len(SPZs) + 3, i + 1, f'=SUM({a}{3}:{a}{2 + len(SPZs)})', form)
+        worksheet.write(len(SPZs) + 3, i + 1, f'=SUM({a}{3}:{a}{len(SPZs) + 2})', form)
