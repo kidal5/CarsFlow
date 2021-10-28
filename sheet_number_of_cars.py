@@ -2,20 +2,50 @@ import xlsxwriter as xw
 import xlsxwriter.utility as xwu
 import pandas as pd
 
-import load_utils
-
 
 def createSheetNumberOfCars(df, xlsxWriter, params):
+    def createSheetNumberOfCarsInner(sheet_name_in, startTime='00:00', endTime='23:59'):
+        data = computeData(df, params, startTime, endTime)
+        writeData(xlsxWriter, sheet_name_in, data, params)
+        writeTemplate(xlsxWriter, sheet_name_in, params)
+
     sheet_name = 'Počty vozidel'
+    createSheetNumberOfCarsInner(sheet_name)
 
-    data = computeData(df)
-    writeData(xlsxWriter, sheet_name, data, params)
-    writeTemplate(xlsxWriter, sheet_name, params)
+    for key in params['sheet_cars_count']:
+        item = params['sheet_cars_count'][key]
+
+        ts = item['time_start']
+        te = item['time_end']
+        sheet_name_edited = f'{sheet_name}_{ts}_{te}'.replace(":", ".")
+        createSheetNumberOfCarsInner(sheet_name_edited, ts, te)
 
 
-def computeData(df, startTime='00:00', endTime='23:59'):
+def computeData(df, params, startTime='00:00', endTime='23:59'):
     # filter time
-    df.set_index('Capture Time').between_time(startTime, endTime).reset_index()
+    df = df.drop(columns=['Place sheet name'])
+    df = df.set_index('Capture Time').between_time(startTime, endTime).reset_index()
+
+    # add fake data to force dataframe layout
+    fake_df = {'Capture Time': [], 'License Plate Number': [], 'Place combined index': []}
+    fake_start_time = pd.to_datetime('00:00')
+    fake_end_time = pd.to_datetime('01:00')
+
+    for i in range(1, params['number_of_cameras'] * 2 + 1):
+        fake_df['Capture Time'].append(fake_start_time)
+        fake_df['License Plate Number'].append(f'fake_{i}')
+        fake_df['Place combined index'].append(i)
+
+        for k in range(1, params['number_of_cameras'] * 2, 1):
+            fake_df['Capture Time'].append(fake_start_time)
+            fake_df['License Plate Number'].append(f'fake_{i}_{k}')
+            fake_df['Place combined index'].append(i)
+            fake_df['Capture Time'].append(fake_end_time)
+            fake_df['License Plate Number'].append(f'fake_{i}_{k}')
+            fake_df['Place combined index'].append(k)
+
+    fake_df = pd.DataFrame.from_dict(fake_df)
+    df = df.append(fake_df, ignore_index=True)
 
     # separate dataset into two parts based on license plate count
     plate_counts = df["License Plate Number"].value_counts()
@@ -23,7 +53,7 @@ def computeData(df, startTime='00:00', endTime='23:59'):
     plate_count = plate_counts[plate_counts > 1]
 
     df_multiple = df[df['License Plate Number'].isin(plate_count.index)]
-    df_single = df[df['License Plate Number'].isin(plate_count.index)]
+    df_single = df[~df['License Plate Number'].isin(plate_count.index)]
 
     # create cross tab from multiple data
     df_multiple_first = df_multiple.sort_values('Capture Time').groupby('License Plate Number').first().reset_index()
@@ -33,10 +63,12 @@ def computeData(df, startTime='00:00', endTime='23:59'):
 
     crosstab = pd.crosstab(df_multiple_firstlast['Place combined index_first'],
                            df_multiple_firstlast['Place combined index_last'])
+    crosstab = crosstab - 1  # remove fake data
 
     # create half cross tab from single data
     halfcrosstab = df_single.groupby('Place combined index').count()
-    halfcrosstab = halfcrosstab.drop(columns=['Capture Time', 'Place sheet name'])
+    halfcrosstab = halfcrosstab - 1  # remove fake data
+    halfcrosstab = halfcrosstab.drop(columns=['Capture Time'])
     halfcrosstab_to = halfcrosstab[halfcrosstab.index % 2 == 1].T
     halfcrosstab_from = halfcrosstab[halfcrosstab.index % 2 == 0].T
 
@@ -139,5 +171,5 @@ def writeTemplate(xlsxWriter, sheet_name, params):
     worksheet.merge_range(N * 2 + 11, 0, N * 2 + 11, 1, "Z města", orange_format)
 
     for i in range(N):
-        worksheet.write(N * 2 + 6, i + 2, f'{i+1} ({i*2+1})', orange_format)
-        worksheet.write(N * 2 + 10, i + 2, f'{i+1} ({i*2+2})', orange_format)
+        worksheet.write(N * 2 + 6, i + 2, f'{i + 1} ({i * 2 + 1})', orange_format)
+        worksheet.write(N * 2 + 10, i + 2, f'{i + 1} ({i * 2 + 2})', orange_format)

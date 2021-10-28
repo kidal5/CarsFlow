@@ -42,7 +42,7 @@ def computeData(df, selectedCombinedIndexes, startTime, endTime):
     # print(len(df))
 
     # filter time
-    df.set_index('Capture Time').between_time(startTime, endTime).reset_index()
+    temp = temp.set_index('Capture Time').between_time(startTime, endTime).reset_index()
     # print(len(temp))
 
     # filter unknown

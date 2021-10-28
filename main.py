@@ -6,6 +6,7 @@ import pandas as pd
 from load_utils import loadExcel
 from sheet_times import createSheetTimes
 from sheet_number_of_travels import createSheetNumberOfTravels
+from sheet_number_of_cars import createSheetNumberOfCars
 
 if __name__ == '__main__':
     with open('parameters.yaml') as f:
@@ -18,11 +19,8 @@ if __name__ == '__main__':
         os.remove(params['output_file'])
 
     writer = pd.ExcelWriter(params['output_file'], engine='xlsxwriter')
-    try:
-        createSheetNumberOfTravels(df.copy(True), writer)
-        createSheetTimes(df, writer, params)
-    except Exception as e:
-        print(e)
-        writer.close()
+    createSheetNumberOfCars(df.copy(True), writer, params)
+    # createSheetNumberOfTravels(df.copy(True), writer)
+    # createSheetTimes(df, writer, params)
 
 
