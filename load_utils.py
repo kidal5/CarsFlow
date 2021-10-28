@@ -1,11 +1,10 @@
 from itertools import chain
 import pandas as pd
 
-load_columns = ['License Plate Number', 'Country', 'Capture Time']
 load_columns = ['License Plate Number', 'Capture Time']
 
 
-def loadExcel(fname, N=10):
+def loadExcel(fname, N):
     xlsx = pd.ExcelFile(fname)
     sheet_names = getSheetNames(N)
     sheet_names_place_index = getSheetNamesPlaceIndexes(N)
@@ -17,10 +16,8 @@ def loadExcel(fname, N=10):
     for name, index, direction, combined_index in zip(sheet_names, sheet_names_place_index, sheet_names_place_direction,
                                                       sheet_names_place_combined_index):
         df_read = pd.read_excel(xlsx, sheet_name=name, usecols=load_columns)
-        df_read['Place sheet name'] = name
-        # df_read['Place index'] = index
-        # df_read['Place direction'] = direction
-        df_read['Place combined index'] = combined_index
+        df_read['Direction'] = combined_index
+        df_read = df_read.rename(columns={'License Plate Number': 'License_plate', 'Capture Time': 'Capture_time'})
 
         if df is None:
             df = df_read
@@ -32,23 +29,23 @@ def loadExcel(fname, N=10):
     return df
 
 
-def getSheetNamesPlaceIndexes(N=10):
+def getSheetNamesPlaceIndexes(N):
     return list(chain.from_iterable((x, x) for x in range(1, N + 1)))
 
 
-def getSheetNamesPlaceDirections(N=10):
+def getSheetNamesPlaceDirections(N):
     return ['to', 'from'] * N
 
 
-def getSheetNamesPlaceDirectionsCZE(N=10):
+def getSheetNamesPlaceDirectionsCZE(N):
     return ['do', 'z'] * N
 
 
-def getSheetNamesPlaceCombinedIndexes(N=10):
+def getSheetNamesPlaceCombinedIndexes(N):
     return list(range(1, N * 2 + 1))
 
 
-def getSheetNames(N=10):
+def getSheetNames(N):
     ind = getSheetNamesPlaceIndexes(N)
     directions = getSheetNamesPlaceDirectionsCZE(N)
     comb_ind = getSheetNamesPlaceCombinedIndexes(N)
