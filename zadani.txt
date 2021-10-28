@@ -1,0 +1,19 @@
+udelat pro kazdy auto cestu, jakou jelo pres to mesto ...
+	pres vsechny prujezdny body ...
+	
+	podminky pro vsechny moznosti tech prujezdu
+	
+	v tom datasetu udělaném to bylo jednoduché, ale počty kamer se mohou měnit
+	
+	prvně udělat ty počty aut, co je tranzit, atd ...
+	
+	
+	
+	tabulka
+		z 1 do 2
+			
+			
+	kdyz mi vytvori nejakou tabulku
+	
+	program navic, 
+		

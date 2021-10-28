@@ -1,0 +1,27 @@
+# input and output files
+input_file: 'input/input.xlsx'
+output_file: 'out.xlsx'
+number_of_cameras: 9 # short indexing format, aka index 3 corresponds to camera 5 and 6
+
+# all possible parameters to Časové údaje sheet
+sheet_times: 
+  time_a: # for more times just add new 'time_x' section
+    # be carefull about indentation
+    selected_directions: # full indexing format, aka index 6 corresponds to camera 3 looking backwards
+      - 1
+      - 3
+      - 5
+    time_start: '04:50' # time format is HH:MM
+    time_end: '09:00'
+
+  time_b: # for more times just add new 'time_x' section
+    # be carefull about indentation
+    selected_directions: 
+      - 5
+      - 7
+      - 9
+    time_start: '04:50' # time format is HH:MM
+    time_end: '09:00'
+
+
+  
