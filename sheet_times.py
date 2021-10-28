@@ -12,22 +12,18 @@ def createSheetTimes(df, xlsxWriter, params):
 
     params = params['sheet_times']
     for key in params.keys():
-        selectedCombinedIndexes = params[key]['selected_directions']
+        selectedDirections = params[key]['selected_directions']
         startTime = params[key]['time_start']
         endTime = params[key]['time_end']
 
-        data = computeData(df, selectedCombinedIndexes, startTime, endTime)
-        writeTemplate(workbook, worksheet, selectedCombinedIndexes, startTime, endTime, currentColumnShift)
+        data = computeData(df, selectedDirections, startTime, endTime)
+        writeTemplate(workbook, worksheet, selectedDirections, startTime, endTime, currentColumnShift)
         writeData(workbook, worksheet, data, currentColumnShift)
         currentColumnShift = currentColumnShift + 20
 
-        print(key)
 
-    xlsxWriter.close()
-
-
-def computeData(df, selectedCombinedIndexes, startTime, endTime):
-    combinedIndexesString = "_".join([f'{i}' for i in selectedCombinedIndexes])
+def computeData(df, selectedDirections, startTime, endTime):
+    combinedIndexesString = "_".join([f'{i}' for i in selectedDirections])
 
     def combinedIndexesFilter(x):
         string = "_".join([f'{i}' for i in x])
@@ -35,72 +31,82 @@ def computeData(df, selectedCombinedIndexes, startTime, endTime):
 
     # filter camera spots
     temp = df
-    temp = temp.drop(columns=['Place sheet name'])
     # print(len(temp))
 
-    temp = temp[temp['Place combined index'].isin(selectedCombinedIndexes)]
+    temp = temp[temp['Direction'].isin(selectedDirections)]
     # print(len(df))
 
     # filter time
-    temp = temp.set_index('Capture Time').between_time(startTime, endTime).reset_index()
+    temp = temp.set_index('Capture_time').between_time(startTime, endTime).reset_index()
     # print(len(temp))
 
     # filter unknown
-    temp = temp[temp['License Plate Number'] != 'unknown']
+    temp = temp[temp['License_plate'] != 'unknown']
     # print(len(temp))
 
+    # add fake data to assure that everything goes smoothly
+    fake_data = {'License_plate': [], 'Capture_time': [], 'Direction': []}
+    for i, dire in enumerate(selectedDirections):
+        fake_data['License_plate'].append('FakeSPZ')
+        fake_data['Capture_time'].append(pd.to_datetime(f'00:{i:02d}'))
+        fake_data['Direction'].append(dire)
+    fake_df = pd.DataFrame().from_dict(fake_data)
+    temp = temp.append(fake_df, ignore_index=True)
+
     # filter cars that do not have enough transit data
-    temp_platesFilter = temp.groupby(by='License Plate Number').nunique().reset_index()
-    temp_platesFilter = temp_platesFilter[temp_platesFilter['Place combined index'] >= len(selectedCombinedIndexes)]
-    temp = temp[temp['License Plate Number'].isin(temp_platesFilter['License Plate Number'])]
+    temp_platesFilter = temp.groupby(by='License_plate').nunique().reset_index()
+    temp_platesFilter = temp_platesFilter[temp_platesFilter['Direction'] >= len(selectedDirections)]
+    temp = temp[temp['License_plate'].isin(temp_platesFilter['License_plate'])]
     # print(len(temp))
 
     # filter cars that have transit in wrong order
-    temp_wrongOrderFilter = temp.sort_values(['License Plate Number', 'Capture Time'], ascending=True).groupby(
-        by='License Plate Number')
-    temp_wrongOrderFilter = temp_wrongOrderFilter[['Place combined index']].agg(combinedIndexesFilter).reset_index()
-    temp_wrongOrderFilter = temp_wrongOrderFilter[temp_wrongOrderFilter['Place combined index']]
-    temp = temp[temp['License Plate Number'].isin(temp_wrongOrderFilter['License Plate Number'])]
+    temp_wrongOrderFilter = temp.sort_values(['License_plate', 'Capture_time'], ascending=True).groupby(
+        by='License_plate')
+    temp_wrongOrderFilter = temp_wrongOrderFilter[['Direction']].agg(combinedIndexesFilter).reset_index()
+    temp_wrongOrderFilter = temp_wrongOrderFilter[temp_wrongOrderFilter['Direction']]
+    temp = temp[temp['License_plate'].isin(temp_wrongOrderFilter['License_plate'])]
     # print(len(temp))
 
     # create wide format
-    temp = temp.sort_values(['License Plate Number', 'Capture Time'], ascending=True).reset_index(drop=True)
+    temp = temp.sort_values(['License_plate', 'Capture_time'], ascending=True).reset_index(drop=True)
     temp['index'] = temp.index
     temp = temp.rename(
-        columns={"Capture Time": f"Capture Time_{0}", "Place combined index": f"Place combined index_{0}"})
+        columns={"Capture_time": f"Capture_time_{0}", "Direction": f"Direction_{0}"})
 
     temp_save = temp
 
-    for i in range(1, len(selectedCombinedIndexes)):
+    for i in range(1, len(selectedDirections)):
         temp_moved = temp_save.copy(deep=True)
         temp_moved['index'] = temp_moved.index - i
         temp_moved = temp_moved.rename(
-            columns={"Capture Time_0": f"Capture Time_{i}", "Place combined index_0": f"Place combined index_{i}"})
+            columns={"Capture_time_0": f"Capture_time_{i}", "Direction_0": f"Direction_{i}"})
 
-        temp = temp.merge(temp_moved, how='inner', on=['index', 'License Plate Number'])
+        temp = temp.merge(temp_moved, how='inner', on=['index', 'License_plate'])
 
     temp = temp.drop(columns=['index'])
 
     def wideFormatCombinedIndexesFilter(row):
-
-        toCheckIndexes = [i * 2 + 2 for i in range(len(selectedCombinedIndexes))]
+        toCheckIndexes = [i * 2 + 2 for i in range(len(selectedDirections))]
         toCheck = row[toCheckIndexes].tolist()
 
-        return selectedCombinedIndexes == toCheck
+        return selectedDirections == toCheck
 
     # filter wide format
     temp = temp[temp.apply(wideFormatCombinedIndexesFilter, axis=1)]
 
+    # remove fake data
+    temp = temp[temp['License_plate'] != 'FakeSPZ']
+
     # add time difference
-    for i in range(1, len(selectedCombinedIndexes)):
-        temp[f'time_{i - 1}'] = temp[f'Capture Time_{i}'] - temp[f'Capture Time_{i - 1}']
+    for i in range(1, len(selectedDirections)):
+        temp[f'time_{i - 1}'] = temp[f'Capture_time_{i}'] - temp[f'Capture_time_{i - 1}']
 
     # remove unused columns
-    for i in range(0, len(selectedCombinedIndexes)):
-        temp = temp.drop(columns=[f'Capture Time_{i}', f'Place combined index_{i}'])
+    for i in range(0, len(selectedDirections)):
+        temp = temp.drop(columns=[f'Capture_time_{i}', f'Direction_{i}'])
 
     # convert time columns to better number
-    for i in range(0, len(selectedCombinedIndexes) - 1):
+    for i in range(0, len(selectedDirections) - 1):
         temp[f'time_{i}'] = temp[f'time_{i}'].dt.seconds / 60
 
     return temp
@@ -144,7 +150,7 @@ def writeData(workbook, worksheet, data, colShift=10):
         worksheet.write(row + 3, colShift + data.shape[1], f'=SUM({a}{row + 4}:{b}{row + 4})', SUM_format)
 
 
-def writeTemplate(workbook, worksheet, selectedCombinedIndexes, startTime, endTime, colShift=10):
+def writeTemplate(workbook, worksheet, selectedDirections, startTime, endTime, colShift=10):
     header_format = workbook.add_format({
         'bold': 1,
         'align': 'center',
@@ -181,19 +187,19 @@ def writeTemplate(workbook, worksheet, selectedCombinedIndexes, startTime, endTi
 
     # write header
     worksheet.set_row(0, 40)
-    header_text = "Označené směry " + ", ".join([str(i) for i in selectedCombinedIndexes])
+    header_text = "Označené směry " + ", ".join([str(i) for i in selectedDirections])
     header_text = f'{header_text}\nPočátek: {startTime}, Konec: {endTime}'
 
-    worksheet.merge_range(0, colShift, 0, colShift + len(selectedCombinedIndexes), header_text, header_format)
+    worksheet.merge_range(0, colShift, 0, colShift + len(selectedDirections), header_text, header_format)
     worksheet.merge_range(1, colShift, 2, colShift, "SPZ", SPZ_format)
-    worksheet.merge_range(1, colShift + len(selectedCombinedIndexes), 2, colShift + len(selectedCombinedIndexes),
+    worksheet.merge_range(1, colShift + len(selectedDirections), 2, colShift + len(selectedDirections),
                           "Celkem [min]", SUM_format)
-    if len(selectedCombinedIndexes) == 2:
+    if len(selectedDirections) == 2:
         worksheet.write(1, colShift + 1, 'Označení směru', DIRECTION_format)
     else:
-        worksheet.merge_range(1, colShift + 1, 1, colShift + len(selectedCombinedIndexes) - 1, "Označení směru",
+        worksheet.merge_range(1, colShift + 1, 1, colShift + len(selectedDirections) - 1, "Označení směru",
                               DIRECTION_format)
 
-    for i in range(len(selectedCombinedIndexes) - 1):
-        text = f'{selectedCombinedIndexes[i]}-{selectedCombinedIndexes[i + 1]} [min]'
+    for i in range(len(selectedDirections) - 1):
+        text = f'{selectedDirections[i]}-{selectedDirections[i + 1]} [min]'
         worksheet.write(2, colShift + 1 + i, text, DIRECTION_format)

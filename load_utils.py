@@ -25,6 +25,7 @@ def loadExcel(fname, N):
             df = df.append(df_read)
 
     df = df.reset_index(drop=True)
+    df = df.astype({'License_plate': 'str'})
 
     return df
 

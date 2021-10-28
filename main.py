@@ -12,15 +12,22 @@ if __name__ == '__main__':
     with open('parameters.yaml') as f:
         params = yaml.safe_load(f)
 
+    print('Loading data')
     df = loadExcel(params['input_file'], params['number_of_cameras'])
 
-    #
     if osp.isfile(params['output_file']):
         os.remove(params['output_file'])
 
     writer = pd.ExcelWriter(params['output_file'], engine='xlsxwriter')
-    # createSheetNumberOfCars(df.copy(True), writer, params)
+
+    print('Creating sheet Počty vozidel')
+    createSheetNumberOfCars(df.copy(True), writer, params)
+
+    print('Creating sheet Počty průjezdů')
     createSheetNumberOfTravels(df.copy(True), writer, params)
-    # createSheetTimes(df, writer, params)
+
+    print('Creating sheet Časové údaje')
+    createSheetTimes(df.copy(True), writer, params)
+    writer.close()
 
 
