@@ -1,9 +1,9 @@
 
 
 # input and output files
-input_file: 'input/input.xlsx'
+input_file: 'test/input.xlsx'
 output_file: 'out.xlsx'
-number_of_cameras: 9 # number of physical cameras, aka measure points 
+number_of_cameras: 7 # number of physical cameras, aka measure points 
 
 # all possible parameters to Počty vozidel sheet
 # all day (aka 00:00 -> 23:59) is created by default
@@ -29,9 +29,8 @@ sheet_times:
 
   time_b: # for more times just add new 'time_x' section
     selected_directions: 
-      - 5
-      - 6
-      - 3
+      - 1
+      - 12
     time_start: '00:00'
     time_end: '23:59'
 
