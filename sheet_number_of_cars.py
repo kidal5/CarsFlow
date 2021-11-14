@@ -131,7 +131,7 @@ def writeData(xlsxWriter, sheet_name, data, params, addDataCheck):
         'align': 'center',
         'valign': 'vcenter',
         'font_size': 11,
-        'bg_color': '#00B050'
+        'bg_color': '#D8E4BC'
     })
 
     wrong_format = workbook.add_format({

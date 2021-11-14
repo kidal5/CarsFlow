@@ -16,6 +16,8 @@ def computeData(df):
     # compute number of items on every input sheet, for data validation
     dataCheck = df.groupby(by='Direction').count().drop(columns=['License_plate'])
 
+    uniqueSPZ = df['License_plate'].nunique()
+
     dick = {
         'Direction': [],
         'SPZ': [],
@@ -57,13 +59,14 @@ def computeData(df):
     out = out.pivot(index='SPZ', columns='Direction', values='Count').fillna(0)
     out = out.drop(columns=['remove me'])
 
-    return {'data': out, 'SPZs': SPZs, 'dataCheck': dataCheck}
+    return {'data': out, 'SPZs': SPZs, 'dataCheck': dataCheck, 'uniqueSPZ': uniqueSPZ}
 
 
 def writeData(xlsxWriter, sheet_name, data, N):
     # Position the dataframes in the worksheet.
     data['data'].to_excel(xlsxWriter, sheet_name=sheet_name, startrow=2, startcol=1, header=False, index=False)
-    data['dataCheck'].T.to_excel(xlsxWriter, sheet_name=sheet_name, startrow=len(data["SPZs"]) + 5, startcol=1, header=False, index=False)
+    data['dataCheck'].T.to_excel(xlsxWriter, sheet_name=sheet_name, startrow=len(data["SPZs"]) + 5, startcol=1,
+                                 header=False, index=False)
 
     workbook = xlsxWriter.book
     worksheet = xlsxWriter.sheets[sheet_name]
@@ -89,7 +92,7 @@ def writeData(xlsxWriter, sheet_name, data, N):
         'align': 'center',
         'valign': 'vcenter',
         'font_size': 11,
-        'bg_color': '#00B050'
+        'bg_color': '#D8E4BC'
     })
 
     wrong_format = workbook.add_format({
@@ -106,17 +109,18 @@ def writeData(xlsxWriter, sheet_name, data, N):
     # this should not be conditional formatting, but i could not found way how to do it properly...
 
     worksheet.conditional_format(2, 1, len(data['SPZs']) + 1, N * 2, {'type': 'cell',
-                                                              'criteria': 'greater than',
-                                                              'value': -1,
-                                                              'format': yellow_format})
+                                                                      'criteria': 'greater than',
+                                                                      'value': -1,
+                                                                      'format': yellow_format})
 
     worksheet.conditional_format(len(data["SPZs"]) + 5, 1, len(data['SPZs']) + 5, N * 2, {'type': 'cell',
-                                                              'criteria': 'greater than',
-                                                              'value': -1,
-                                                              'format': xd_format})
+                                                                                          'criteria': 'greater than',
+                                                                                          'value': -1,
+                                                                                          'format': xd_format})
 
     worksheet.conditional_format(len(data["SPZs"]) + 6, 1, len(data['SPZs']) + 6, N * 2, cond_good)
     worksheet.conditional_format(len(data["SPZs"]) + 6, 1, len(data['SPZs']) + 6, N * 2, cond_wrong)
+
 
 def writeTemplate(xlsxWriter, sheet_name, data, N):
     workbook = xlsxWriter.book
@@ -127,6 +131,16 @@ def writeTemplate(xlsxWriter, sheet_name, data, N):
     worksheet.set_column(0, 0, 16)
 
     # formats
+    yellow_format = workbook.add_format({
+        'border': 1,
+        'font_color': 'red',
+        'bg_color': '#FFF2CC',
+        'align': 'center',
+        'valign': 'vcenter',
+        'font_size': 11,
+        'text_wrap': True,
+    })
+
     first_line_format = workbook.add_format({
         'bold': 1,
         'border': 1,
@@ -170,7 +184,8 @@ def writeTemplate(xlsxWriter, sheet_name, data, N):
     # write first/second line
     worksheet.merge_range(0, N * 2 + 1, 1, N * 2 + 1, 'Celkem [počet]', second_line_format)
     worksheet.merge_range(0, N * 2 + 2, 1, N * 2 + 2, 'Poměr', second_line_format)
-    worksheet.merge_range(0, N * 2 + 3, 1, N * 2 + 3, 'Počet SPZ', second_line_format)
+    worksheet.merge_range(0, N * 2 + 3, 1, N * 2 + 3, 'Celkový počet unikátních SPZ ', second_line_format)
+    worksheet.write(2, N * 2 + 3, data['uniqueSPZ'], yellow_format)
 
     # write data lines
     for i, spz in enumerate(data['SPZs']):
@@ -184,11 +199,9 @@ def writeTemplate(xlsxWriter, sheet_name, data, N):
         if spz == 'unknown':
             worksheet.write(2 + i, N * 2 + 1, f'=SUM({a}{3 + i}:{b}{3 + i}) * 1', second_line_format)
             worksheet.write(2 + i, N * 2 + 2, f'={c}{3 + i}/${c}${len(data["SPZs"]) + 4}', percent_format)
-            worksheet.write(2 + i, N * 2 + 3, f'={c}{3 + i}', second_line_format)
         else:
             worksheet.write(2 + i, N * 2 + 1, f'=SUM({a}{3 + i}:{b}{3 + i}) * A{3 + i}', second_line_format)
             worksheet.write(2 + i, N * 2 + 2, f'={c}{3 + i}/${c}${len(data["SPZs"]) + 4}', percent_format)
-            worksheet.write(2 + i, N * 2 + 3, f'={c}{3 + i} / A{3 + i}', second_line_format)
 
     # write last line, not anymore, xd
     worksheet.write(len(data['SPZs']) + 3, 0, "Celkem [počet]", second_line_format)
@@ -198,7 +211,7 @@ def writeTemplate(xlsxWriter, sheet_name, data, N):
                         f'=SUMPRODUCT({a}{3}:{a}{len(data["SPZs"]) + 1},A{3}:A{len(data["SPZs"]) + 1}) + {a}{len(data["SPZs"]) + 2}',
                         second_line_format)
 
-    for i in range(N * 2, N * 2 + 3):
+    for i in range(N * 2, N * 2 + 2):
         a = xwu.xl_col_to_name(i + 1)
 
         form = second_line_format
@@ -211,6 +224,7 @@ def writeTemplate(xlsxWriter, sheet_name, data, N):
     worksheet.write(len(data["SPZs"]) + 6, 0, "Validace dat", second_line_format)
 
     for i in range(N * 2):
-        a = xwu.xl_col_to_name(i+1)
+        a = xwu.xl_col_to_name(i + 1)
 
-        worksheet.write(len(data["SPZs"]) + 6, i + 1, f'={a}{len(data["SPZs"]) + 4} - {a}{len(data["SPZs"]) + 6}', second_line_format)
+        worksheet.write(len(data["SPZs"]) + 6, i + 1, f'={a}{len(data["SPZs"]) + 4} - {a}{len(data["SPZs"]) + 6}',
+                        second_line_format)
