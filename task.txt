@@ -1,5 +1,4 @@
 přidat generování složek
 parameters.yaml
-posunout časové údaje správně
 přidat tam ten speciální krok
 	přidat že je možnost upravovat v yaml uplen kdekoliv, dodržovat odsaozování\
