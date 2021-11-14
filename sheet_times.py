@@ -19,30 +19,21 @@ def createSheetTimes(df, xlsxWriter, params):
         data = computeData(df, selectedDirections, startTime, endTime)
         writeTemplate(workbook, worksheet, selectedDirections, startTime, endTime, currentColumnShift)
         writeData(workbook, worksheet, data, currentColumnShift)
-        currentColumnShift = currentColumnShift + 20
+        currentColumnShift = currentColumnShift + len(selectedDirections) * 2 + 2
 
 
 def computeData(df, selectedDirections, startTime, endTime):
     combinedIndexesString = "_".join([f'{i}' for i in selectedDirections])
 
-    def combinedIndexesFilter(x):
-        string = "_".join([f'{i}' for i in x])
-        return combinedIndexesString in string
+    def checkForCorrectDirections(x):
+        values = [str(x[f'Direction_{i}']) for i in range(len(selectedDirections))]
+        return combinedIndexesString == "_".join(values)
 
-    # filter camera spots
-    temp = df
-    # print(len(temp))
-
-    temp = temp[temp['Direction'].isin(selectedDirections)]
-    # print(len(df))
+    temp = df.copy(deep=True)
+    temp = temp[temp['License_plate'] != 'unknown']
 
     # filter time
     temp = temp.set_index('Capture_time').between_time(startTime, endTime).reset_index()
-    # print(len(temp))
-
-    # filter unknown
-    temp = temp[temp['License_plate'] != 'unknown']
-    # print(len(temp))
 
     # add fake data to assure that everything goes smoothly
     fake_data = {'License_plate': [], 'Capture_time': [], 'Direction': []}
@@ -52,20 +43,6 @@ def computeData(df, selectedDirections, startTime, endTime):
         fake_data['Direction'].append(dire)
     fake_df = pd.DataFrame().from_dict(fake_data)
     temp = temp.append(fake_df, ignore_index=True)
-
-    # filter cars that do not have enough transit data
-    temp_platesFilter = temp.groupby(by='License_plate').nunique().reset_index()
-    temp_platesFilter = temp_platesFilter[temp_platesFilter['Direction'] >= len(selectedDirections)]
-    temp = temp[temp['License_plate'].isin(temp_platesFilter['License_plate'])]
-    # print(len(temp))
-
-    # filter cars that have transit in wrong order
-    temp_wrongOrderFilter = temp.sort_values(['License_plate', 'Capture_time'], ascending=True).groupby(
-        by='License_plate')
-    temp_wrongOrderFilter = temp_wrongOrderFilter[['Direction']].agg(combinedIndexesFilter).reset_index()
-    temp_wrongOrderFilter = temp_wrongOrderFilter[temp_wrongOrderFilter['Direction']]
-    temp = temp[temp['License_plate'].isin(temp_wrongOrderFilter['License_plate'])]
-    # print(len(temp))
 
     # create wide format
     temp = temp.sort_values(['License_plate', 'Capture_time'], ascending=True).reset_index(drop=True)
@@ -84,30 +61,32 @@ def computeData(df, selectedDirections, startTime, endTime):
         temp = temp.merge(temp_moved, how='inner', on=['index', 'License_plate'])
 
     temp = temp.drop(columns=['index'])
-
-    def wideFormatCombinedIndexesFilter(row):
-        toCheckIndexes = [i * 2 + 2 for i in range(len(selectedDirections))]
-        toCheck = row[toCheckIndexes].tolist()
-
-        return selectedDirections == toCheck
-
-    # filter wide format
-    temp = temp[temp.apply(wideFormatCombinedIndexesFilter, axis=1)]
+    temp = temp[temp.agg(checkForCorrectDirections, axis=1)]
 
     # remove fake data
     temp = temp[temp['License_plate'] != 'FakeSPZ']
 
     # add time difference
     for i in range(1, len(selectedDirections)):
-        temp[f'time_{i - 1}'] = temp[f'Capture_time_{i}'] - temp[f'Capture_time_{i - 1}']
+        temp[f'Diff_time_{i - 1}'] = temp[f'Capture_time_{i}'] - temp[f'Capture_time_{i - 1}']
 
     # remove unused columns
     for i in range(0, len(selectedDirections)):
-        temp = temp.drop(columns=[f'Capture_time_{i}', f'Direction_{i}'])
+        temp = temp.drop(columns=[f'Direction_{i}'])
 
     # convert time columns to better number
     for i in range(0, len(selectedDirections) - 1):
-        temp[f'time_{i}'] = temp[f'time_{i}'].dt.seconds / 60
+        temp[f'Diff_time_{i}'] = temp[f'Diff_time_{i}'].dt.seconds / 60
+
+    # convert capture time to string, so excel writer do not messes it up...
+    for i in range(0, len(selectedDirections)):
+        temp[f'Capture_time_{i}'] = temp[f'Capture_time_{i}'].dt.strftime('%H:%M:%S')
+
+    # reorder columns
+    columns = ['License_plate'] + [f'Capture_time_{i}' for i in range(len(selectedDirections))] + [f'Diff_time_{i}' for
+                                                                                                   i in range(
+            len(selectedDirections) - 1)]
+    temp = temp[columns]
 
     return temp
 
@@ -187,19 +166,21 @@ def writeTemplate(workbook, worksheet, selectedDirections, startTime, endTime, c
 
     # write header
     worksheet.set_row(0, 40)
+    worksheet.set_column(colShift, colShift + len(selectedDirections) * 2, 10)
     header_text = "Označené směry " + ", ".join([str(i) for i in selectedDirections])
     header_text = f'{header_text}\nPočátek: {startTime}, Konec: {endTime}'
 
-    worksheet.merge_range(0, colShift, 0, colShift + len(selectedDirections), header_text, header_format)
+    worksheet.merge_range(0, colShift, 0, colShift + len(selectedDirections) * 2, header_text, header_format)
     worksheet.merge_range(1, colShift, 2, colShift, "SPZ", SPZ_format)
-    worksheet.merge_range(1, colShift + len(selectedDirections), 2, colShift + len(selectedDirections),
+    worksheet.merge_range(1, colShift + len(selectedDirections) * 2, 2, colShift + len(selectedDirections) * 2,
                           "Celkem [min]", SUM_format)
-    if len(selectedDirections) == 2:
-        worksheet.write(1, colShift + 1, 'Označení směru', DIRECTION_format)
-    else:
-        worksheet.merge_range(1, colShift + 1, 1, colShift + len(selectedDirections) - 1, "Označení směru",
-                              DIRECTION_format)
+
+    worksheet.merge_range(1, colShift + 1, 1, colShift + len(selectedDirections) * 2 - 1, "Označení směru", DIRECTION_format)
+
+    for i in range(len(selectedDirections)):
+        text = f'Průjezd {selectedDirections[i]}'
+        worksheet.write(2, colShift + 1 + i, text, DIRECTION_format)
 
     for i in range(len(selectedDirections) - 1):
         text = f'{selectedDirections[i]}-{selectedDirections[i + 1]} [min]'
-        worksheet.write(2, colShift + 1 + i, text, DIRECTION_format)
+        worksheet.write(2, colShift + 1 + i + len(selectedDirections), text, DIRECTION_format)
