@@ -19,3 +19,5 @@ You can create more ```xxx.yaml``` files and switch between them, no need to hav
 ## Changelog
 - 22.11.2021
   - Added possibility to specify Date for filtering, previously was just Time
+  - Separated ```unknown``` License Plates in Počty vozidel sheet
+
