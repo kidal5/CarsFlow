@@ -86,9 +86,8 @@ def computeData(df, selectedDirections, time: TimeStruct):
         temp[f'Capture_time_{i}'] = temp[f'Capture_time_{i}'].dt.strftime('%H:%M:%S')
 
     # reorder columns
-    columns = ['License_plate'] + [f'Capture_time_{i}' for i in range(len(selectedDirections))] + [f'Diff_time_{i}' for
-                                                                                                   i in range(
-            len(selectedDirections) - 1)]
+    columns = ['License_plate'] + [f'Capture_time_{i}' for i in range(len(selectedDirections))] \
+              + [f'Diff_time_{i}' for i in range(len(selectedDirections) - 1)]
     temp = temp[columns]
 
     return temp
@@ -132,7 +131,7 @@ def writeData(workbook, worksheet, data, colShift=10):
         worksheet.write(row + 3, colShift + data.shape[1], f'=SUM({a}{row + 4}:{b}{row + 4})', SUM_format)
 
 
-def writeTemplate(workbook, worksheet, selectedDirections, time:TimeStruct, colShift=10):
+def writeTemplate(workbook, worksheet, selectedDirections, time: TimeStruct, colShift=10):
     header_format = workbook.add_format({
         'bold': 1,
         'align': 'center',
@@ -178,7 +177,8 @@ def writeTemplate(workbook, worksheet, selectedDirections, time:TimeStruct, colS
     worksheet.merge_range(1, colShift + len(selectedDirections) * 2, 2, colShift + len(selectedDirections) * 2,
                           "Celkem [min]", SUM_format)
 
-    worksheet.merge_range(1, colShift + 1, 1, colShift + len(selectedDirections) * 2 - 1, "Označení směru", DIRECTION_format)
+    worksheet.merge_range(1, colShift + 1, 1, colShift + len(selectedDirections) * 2 - 1, "Označení směru",
+                          DIRECTION_format)
 
     for i in range(len(selectedDirections)):
         text = f'Průjezd {selectedDirections[i]}'

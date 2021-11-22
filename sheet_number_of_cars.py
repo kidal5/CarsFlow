@@ -37,10 +37,10 @@ def computeData(df, params, time: TimeStruct, addDataCheck=True):
     # separate dataset into two parts based on license plate count
     plate_counts = df["License_plate"].value_counts()
     plate_counts['unknown'] = 0  # fake condition value of unknown type, so they are selected into single dataset
-    plate_count = plate_counts[plate_counts > 1]
 
-    df_multiple = df[df['License_plate'].isin(plate_count.index)]
-    df_single = df[~df['License_plate'].isin(plate_count.index)]
+    df_multiple = df[df['License_plate'].isin(plate_counts[plate_counts > 1].index)]
+    df_single = df[df['License_plate'].isin(plate_counts[plate_counts == 1].index)]
+    df_single_unknown = df[df['License_plate'].isin(plate_counts[plate_counts < 1].index)]
 
     # make sense only in full dataset...
     if addDataCheck:
@@ -59,13 +59,21 @@ def computeData(df, params, time: TimeStruct, addDataCheck=True):
     crosstab = crosstab - 1  # remove fake data
 
     # create half cross tab from single data
-    halfcrosstab = df_single.groupby('Direction').count()
-    halfcrosstab = halfcrosstab - 1  # remove fake datax;
-    halfcrosstab = halfcrosstab.drop(columns=['Capture_time'])
-    halfcrosstab_to = halfcrosstab[halfcrosstab.index % 2 == 1].T
-    halfcrosstab_from = halfcrosstab[halfcrosstab.index % 2 == 0].T
+    def createHallCrossTab(df_in):
+        halfcrosstab = df_in.groupby('Direction').count()
+        halfcrosstab = halfcrosstab - 1  # remove fake datax;
+        halfcrosstab = halfcrosstab.drop(columns=['Capture_time'])
+        halfcrosstab_to = halfcrosstab[halfcrosstab.index % 2 == 1].T
+        halfcrosstab_from = halfcrosstab[halfcrosstab.index % 2 == 0].T
 
-    return {'multiple': crosstab, 'singleTo': halfcrosstab_to, 'singleFrom': halfcrosstab_from, 'dataCheck': dataCheck}
+        return halfcrosstab_to, halfcrosstab_from
+
+    # create half cross tab from single data
+    singleTo, singleFrom = createHallCrossTab(df_single)
+    singleUnknownTo, singleUnknownFrom = createHallCrossTab(df_single_unknown)
+
+    return {'multiple': crosstab, 'singleTo': singleTo, 'singleFrom': singleFrom, 'singleUnknownTo': singleUnknownTo,
+            'singleUnknownFrom': singleUnknownFrom, 'dataCheck': dataCheck}
 
 
 def createFakeDataset(N):
@@ -76,6 +84,10 @@ def createFakeDataset(N):
     for i in range(1, N * 2 + 1):
         fake_df['Capture_time'].append(fake_start_time)
         fake_df['License_plate'].append(f'fake_{i}')
+        fake_df['Direction'].append(i)
+
+        fake_df['Capture_time'].append(fake_start_time)
+        fake_df['License_plate'].append(f'unknown')
         fake_df['Direction'].append(i)
 
         for k in range(1, N * 2 + 1):
@@ -111,6 +123,11 @@ def writeData(xlsxWriter, sheet_name, data, params, addDataCheck):
                               index=False)
     data['singleFrom'].to_excel(xlsxWriter, sheet_name=sheet_name, startrow=5 + N * 2 + 7, startcol=2, header=False,
                                 index=False)
+
+    data['singleUnknownTo'].to_excel(xlsxWriter, sheet_name=sheet_name, startrow=5 + N * 2 + 11, startcol=2,
+                                     header=False, index=False)
+    data['singleUnknownFrom'].to_excel(xlsxWriter, sheet_name=sheet_name, startrow=5 + N * 2 + 15, startcol=2,
+                                       header=False, index=False)
 
     if addDataCheck:
         data['multiple'].to_excel(xlsxWriter, sheet_name=sheet_name, startrow=5, startcol=N * 2 + 3, header=False,
@@ -157,6 +174,8 @@ def writeData(xlsxWriter, sheet_name, data, params, addDataCheck):
 
     worksheet.conditional_format(5 + N * 2 + 3, 2, 4 + N * 2 + 4, N + 1, cond)
     worksheet.conditional_format(5 + N * 2 + 7, 2, 4 + N * 2 + 8, N + 1, cond)
+    worksheet.conditional_format(5 + N * 2 + 11, 2, 4 + N * 2 + 12, N + 1, cond)
+    worksheet.conditional_format(5 + N * 2 + 15, 2, 4 + N * 2 + 16, N + 1, cond)
 
 
 def writeTemplate(xlsxWriter, sheet_name, params, time: TimeStruct, addDataCheck):
@@ -222,18 +241,26 @@ def writeTemplate(xlsxWriter, sheet_name, params, time: TimeStruct, addDataCheck
         worksheet.write(i + 5, 1, i + 1, blue_format)
 
     # write single cars template
-    worksheet.merge_range(N * 2 + 6, 0, N * 2 + 6, N + 1, "Pouze DO města ", first_line_format)
-    worksheet.merge_range(N * 2 + 10, 0, N * 2 + 10, N + 1, "Pouze Z města ", first_line_format)
+    worksheet.merge_range(N * 2 + 6, 0, N * 2 + 6, N + 1, "Pouze DO města - bez unknown", first_line_format)
+    worksheet.merge_range(N * 2 + 10, 0, N * 2 + 10, N + 1, "Pouze Z města - bez unknown", first_line_format)
+    worksheet.merge_range(N * 2 + 14, 0, N * 2 + 14, N + 1, "Pouze DO města - pouze unknown", first_line_format)
+    worksheet.merge_range(N * 2 + 18, 0, N * 2 + 18, N + 1, "Pouze Z města - pouze unknown", first_line_format)
 
     worksheet.merge_range(N * 2 + 7, 0, N * 2 + 7, 1, "Sčítací bod", orange_format)
     worksheet.merge_range(N * 2 + 11, 0, N * 2 + 11, 1, "Sčítací bod", orange_format)
+    worksheet.merge_range(N * 2 + 15, 0, N * 2 + 15, 1, "Sčítací bod", orange_format)
+    worksheet.merge_range(N * 2 + 19, 0, N * 2 + 19, 1, "Sčítací bod", orange_format)
 
     worksheet.merge_range(N * 2 + 8, 0, N * 2 + 8, 1, "DO města", orange_format)
     worksheet.merge_range(N * 2 + 12, 0, N * 2 + 12, 1, "Z města", orange_format)
+    worksheet.merge_range(N * 2 + 16, 0, N * 2 + 16, 1, "DO města", orange_format)
+    worksheet.merge_range(N * 2 + 20, 0, N * 2 + 20, 1, "Z města", orange_format)
 
     for i in range(N):
         worksheet.write(N * 2 + 7, i + 2, f'{i + 1} ({i * 2 + 1})', orange_format)
         worksheet.write(N * 2 + 11, i + 2, f'{i + 1} ({i * 2 + 2})', orange_format)
+        worksheet.write(N * 2 + 15, i + 2, f'{i + 1} ({i * 2 + 1})', orange_format)
+        worksheet.write(N * 2 + 19, i + 2, f'{i + 1} ({i * 2 + 2})', orange_format)
 
     # write data validity checks
     if addDataCheck:
@@ -259,7 +286,7 @@ def writeTemplate(xlsxWriter, sheet_name, params, time: TimeStruct, addDataCheck
             if i % 2 == 1:
                 di = di + 4
 
-            cellText = f'=SUM({a}{6 + i}:{b}{6 + i}) + {c}{6 + i} + {d}{di} + 1'
+            cellText = f'=SUM({a}{6 + i}:{b}{6 + i}) + {c}{6 + i} + {d}{di} + {d}{di+8} + 1'
             worksheet.write(5 + i, N * 2 + 4, cellText, border_format)
 
         # write data into Validace dat column
