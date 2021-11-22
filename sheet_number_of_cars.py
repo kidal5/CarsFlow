@@ -2,31 +2,35 @@ import xlsxwriter as xw
 import xlsxwriter.utility as xwu
 import pandas as pd
 
+from TimeStruct import *
+
 
 def createSheetNumberOfCars(df, xlsxWriter, params):
-    def createSheetNumberOfCarsInner(sheet_name_in, startTime, endTime, addDataCheck):
-        data = computeData(df, params, startTime, endTime, addDataCheck)
+    def createSheetNumberOfCarsInner(sheet_name_in, time_in: TimeStruct, addDataCheck):
+        data = computeData(df, params, time_in, addDataCheck)
         writeData(xlsxWriter, sheet_name_in, data, params, addDataCheck)
-        writeTemplate(xlsxWriter, sheet_name_in, params, startTime, endTime, addDataCheck)
+        writeTemplate(xlsxWriter, sheet_name_in, params, time_in, addDataCheck)
 
     sheet_name = 'Počty vozidel'
-    createSheetNumberOfCarsInner(sheet_name, '00:00', '23:59', True)
+    createSheetNumberOfCarsInner(sheet_name, TimeStruct.createFromStartAndEndTime('00:00', '23:59', df), True)
 
     for key in params['sheet_cars_count']:
         item = params['sheet_cars_count'][key]
 
-        ts = item['time_start']
-        te = item['time_end']
-        sheet_name_edited = f'{sheet_name} {ts}-{te}'.replace(":", ".")
-        createSheetNumberOfCarsInner(sheet_name_edited, ts, te, False)
+        time = TimeStruct.createFromDict(item, df)
+
+        sheet_name_edited = f'{sheet_name} {time.sheetName}'
+        createSheetNumberOfCarsInner(sheet_name_edited, time, False)
 
 
-def computeData(df, params, startTime='00:00', endTime='23:59', addDataCheck=True):
+def computeData(df, params, time: TimeStruct, addDataCheck=True):
     # compute number of items on every input sheet, for data validation
     dataCheck = df.groupby(by='Direction').count().drop(columns=['License_plate'])
 
     # filter time
-    df = df.set_index('Capture_time').between_time(startTime, endTime).reset_index()
+    df = df.set_index('Capture_time').sort_index()
+    df = df[time.dateTimeStart: time.dateTimeEnd]
+    df = df.reset_index()
 
     # add fake data to force dataframe layout, aka have at least one entry for every possible combination
     fake_df = createFakeDataset(params['number_of_cameras'])
@@ -157,7 +161,7 @@ def writeData(xlsxWriter, sheet_name, data, params, addDataCheck):
     worksheet.conditional_format(5 + N * 2 + 7, 2, 4 + N * 2 + 8, N + 1, cond)
 
 
-def writeTemplate(xlsxWriter, sheet_name, params, startTime, endTime, addDataCheck):
+def writeTemplate(xlsxWriter, sheet_name, params, time: TimeStruct, addDataCheck):
     N = params['number_of_cameras']
 
     workbook = xlsxWriter.book
@@ -202,7 +206,7 @@ def writeTemplate(xlsxWriter, sheet_name, params, startTime, endTime, addDataChe
 
     # write first and second row
     worksheet.merge_range(0, 0, 0, N * 2 + 1, "Základní výstupní tabulky (počty všech vozidel)", first_line_format)
-    worksheet.merge_range(1, 0, 1, N * 2 + 1, f"Vybraný čas: {startTime} -> {endTime}", first_line_format)
+    worksheet.merge_range(1, 0, 1, N * 2 + 1, f"Vybraný čas: {time.fullSheetName}", first_line_format)
 
     # write third row and first column
     worksheet.write(3, 0, "Sčítací bod", orange_format)

@@ -8,13 +8,14 @@ number_of_cameras: 9 # number of physical cameras, aka measure points
 # all possible parameters to Počty vozidel sheet
 # all day (aka 00:00 -> 23:59) is created by default
 sheet_cars_count: 
-  time_a: 
+  time_a:
     time_start: '04:50' #inclusive, time format is HH:MM
     time_end: '04:50' #inclusive
 
+  # Or you can specify start and end date. Like in example below. 
   time_b: # for more times just add new 'time_x' section
-    time_start: '03:00' 
-    time_end: '10:00'
+    dateTime_start: '6.10.2021 - 00:01' # inclusive, dateTime format is ~dd.mm.YYYY - HH:MM~ 
+    dateTime_end: '6.10.2021 - 23:59' # inclusive
   
 # there are no parameters for Počty průjezdů sheet
 
@@ -29,10 +30,13 @@ sheet_times:
     time_start: '00:00'
     time_end: '23:59'
 
+  # You can also specify start and end date. Like in example below. 
   time_b: # for more times just add new 'time_x' section
     selected_directions: 
       - 1
       - 12
+    date_start: '1.1.2021' # inclusive, date format is dd.mm.YYYY
+    date_end: '31.12.2021' # inclusive
     time_start: '00:00'
     time_end: '23:59'
 
