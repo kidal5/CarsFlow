@@ -15,3 +15,7 @@
 
 ## More yaml files
 You can create more ```xxx.yaml``` files and switch between them, no need to have just one. To use this feature create new parameters file, ex. ```params.yaml```. Then run script with one optional parametr specified  ```python .\main.py -p params.yaml```.
+
+## Changelog
+- 22.11.2021
+  - Added possibility to specify Date for filtering, previously was just Time
