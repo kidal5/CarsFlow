@@ -30,15 +30,13 @@ sheet_times:
     time_start: '00:00'
     time_end: '23:59'
 
-  # You can also specify start and end date. Like in example below. 
+  # Or you can specify start and end date. Like in example below. 
   time_b: # for more times just add new 'time_x' section
     selected_directions: 
       - 1
       - 12
-    date_start: '1.1.2021' # inclusive, date format is dd.mm.YYYY
-    date_end: '31.12.2021' # inclusive
-    time_start: '00:00'
-    time_end: '23:59'
+    dateTime_start: '6.10.2021 - 00:01' # inclusive, dateTime format is ~dd.mm.YYYY - HH:MM~ 
+    dateTime_end: '7.10.2021 - 18:00' # inclusive
 
 
   

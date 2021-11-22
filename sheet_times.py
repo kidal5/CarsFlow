@@ -2,6 +2,8 @@ import xlsxwriter as xw
 import xlsxwriter.utility as xwu
 import pandas as pd
 
+from TimeStruct import *
+
 
 def createSheetTimes(df, xlsxWriter, params):
     sheet_name = 'Časové údaje'
@@ -10,19 +12,18 @@ def createSheetTimes(df, xlsxWriter, params):
 
     currentColumnShift = 0
 
-    params = params['sheet_times']
-    for key in params.keys():
-        selectedDirections = params[key]['selected_directions']
-        startTime = params[key]['time_start']
-        endTime = params[key]['time_end']
+    for item in params['sheet_times'].values():
+        selectedDirections = item['selected_directions']
 
-        data = computeData(df, selectedDirections, startTime, endTime)
-        writeTemplate(workbook, worksheet, selectedDirections, startTime, endTime, currentColumnShift)
+        time = TimeStruct.createFromDict(item, df)
+
+        data = computeData(df, selectedDirections, time)
+        writeTemplate(workbook, worksheet, selectedDirections, time, currentColumnShift)
         writeData(workbook, worksheet, data, currentColumnShift)
         currentColumnShift = currentColumnShift + len(selectedDirections) * 2 + 2
 
 
-def computeData(df, selectedDirections, startTime, endTime):
+def computeData(df, selectedDirections, time: TimeStruct):
     combinedIndexesString = "_".join([f'{i}' for i in selectedDirections])
 
     def checkForCorrectDirections(x):
@@ -33,7 +34,9 @@ def computeData(df, selectedDirections, startTime, endTime):
     temp = temp[temp['License_plate'] != 'unknown']
 
     # filter time
-    temp = temp.set_index('Capture_time').between_time(startTime, endTime).reset_index()
+    temp = temp.set_index('Capture_time').sort_index()
+    temp = temp[time.dateTimeStart: time.dateTimeEnd]
+    temp = temp.reset_index()
 
     # add fake data to assure that everything goes smoothly
     fake_data = {'License_plate': [], 'Capture_time': [], 'Direction': []}
@@ -129,7 +132,7 @@ def writeData(workbook, worksheet, data, colShift=10):
         worksheet.write(row + 3, colShift + data.shape[1], f'=SUM({a}{row + 4}:{b}{row + 4})', SUM_format)
 
 
-def writeTemplate(workbook, worksheet, selectedDirections, startTime, endTime, colShift=10):
+def writeTemplate(workbook, worksheet, selectedDirections, time:TimeStruct, colShift=10):
     header_format = workbook.add_format({
         'bold': 1,
         'align': 'center',
@@ -168,7 +171,7 @@ def writeTemplate(workbook, worksheet, selectedDirections, startTime, endTime, c
     worksheet.set_row(0, 40)
     worksheet.set_column(colShift, colShift + len(selectedDirections) * 2, 10)
     header_text = "Označené směry " + ", ".join([str(i) for i in selectedDirections])
-    header_text = f'{header_text}\nPočátek: {startTime}, Konec: {endTime}'
+    header_text = f'{header_text}\n{time.fullSheetName}'
 
     worksheet.merge_range(0, colShift, 0, colShift + len(selectedDirections) * 2, header_text, header_format)
     worksheet.merge_range(1, colShift, 2, colShift, "SPZ", SPZ_format)

@@ -14,9 +14,7 @@ def createSheetNumberOfCars(df, xlsxWriter, params):
     sheet_name = 'Počty vozidel'
     createSheetNumberOfCarsInner(sheet_name, TimeStruct.createFromStartAndEndTime('00:00', '23:59', df), True)
 
-    for key in params['sheet_cars_count']:
-        item = params['sheet_cars_count'][key]
-
+    for item in params['sheet_cars_count'].values():
         time = TimeStruct.createFromDict(item, df)
 
         sheet_name_edited = f'{sheet_name} {time.sheetName}'
