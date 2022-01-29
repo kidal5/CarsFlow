@@ -9,6 +9,14 @@ class TimeStruct:
     sheetName: str
     fullSheetName: str
 
+    def findUnusedSheetName(self, baseName, xlsxWriter):
+        replacements = [',', '@', ';', '!', '#', '^', '+', '~']
+
+        for replacement in replacements:
+            candidate = f"{baseName} {self.sheetName.replace('*', replacement)}"
+            if candidate not in xlsxWriter.sheets:
+                return candidate
+
     @staticmethod
     def normalizeDict(dictt, df):
         ts = dictt['time_start']
@@ -30,6 +38,6 @@ class TimeStruct:
         dts = dt.datetime.strptime(dictt['dateTime_start'], "%d.%m.%Y - %H:%M")
         dte = dt.datetime.strptime(dictt['dateTime_end'], "%d.%m.%Y - %H:%M")
 
-        name = f'{dts.strftime("%H.%M")} -> {dte.strftime("%H.%M")}'
+        name = f'{dts.strftime("%d.%m.%y* %H.%M")}'
         fullName = f'{dts.strftime("%d.%m.%Y - %H:%M")} -> {dte.strftime("%d.%m.%Y - %H:%M")}'
         return TimeStruct(dts, dte, name, fullName)

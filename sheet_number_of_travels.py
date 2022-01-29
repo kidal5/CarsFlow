@@ -17,9 +17,7 @@ def createSheetNumberOfTravels(df, xlsxWriter, params):
 
     for item in params['sheet_number_of_travels'].values():
         time = TimeStruct.createFromDict(item, df)
-
-        sheet_name_edited = f'{sheet_name} {time.sheetName}'
-        createSheetNumberOfTravelsInner(sheet_name_edited, time)
+        createSheetNumberOfTravelsInner(time.findUnusedSheetName(sheet_name, xlsxWriter), time)
 
 
 def computeData(df, time):
