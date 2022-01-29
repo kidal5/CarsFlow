@@ -10,7 +10,7 @@
 ########################################################
 
 ################# INPUT AND OUTPUT FILES ###############
-input_file: 'test/input.xlsx'
+input_file: 'test/input_2.xlsx'
 output_file: 'out.xlsx'
 number_of_cameras: 9 # number of physical cameras, aka measure points 
 
@@ -18,8 +18,8 @@ number_of_cameras: 9 # number of physical cameras, aka measure points
 # all day (aka 00:00 -> 23:59) is created by default
 sheet_cars_count: 
   time_a:
-    dateTime_start: '7.10.2021 - 04:50' 
-    dateTime_end: '7.10.2021 - 04:50' 
+    dateTime_start: '2.11.2021 - 04:50'
+    dateTime_end: '3.11.2021 - 04:50'
 
   # for more times just add new 'time_x' section
   time_b: 
@@ -33,39 +33,10 @@ sheet_number_of_travels:
     dateTime_start: '7.10.2021 - 04:50' 
     dateTime_end: '7.10.2021 - 20:21' 
 
-  time_v:
+  # for more times just add new 'time_x' section
+  time_b:
     dateTime_start: '7.10.2021 - 04:50' 
     dateTime_end: '7.10.2021 - 20:21' 
-
-  time_w:
-    dateTime_start: '7.10.2021 - 04:50' 
-    dateTime_end: '7.10.2021 - 20:21' 
-
-  time_asd:
-    dateTime_start: '7.10.2021 - 04:50' 
-    dateTime_end: '7.10.2021 - 20:21' 
-
-  time_aasdsadsd:
-    dateTime_start: '7.10.2021 - 04:50' 
-    dateTime_end: '7.10.2021 - 20:21' 
-
-  time_asdsadsadsadsadsada:
-    dateTime_start: '7.10.2021 - 04:50' 
-    dateTime_end: '7.10.2021 - 20:21' 
-
-  time_aasdsadsadsadsadsadsdasda:
-    dateTime_start: '7.10.2021 - 04:50' 
-    dateTime_end: '7.10.2021 - 20:21' 
-
-  time_aqqwe:
-    dateTime_start: '7.10.2021 - 04:50' 
-    dateTime_end: '7.10.2021 - 20:21' 
-
-
-  # # for more times just add new 'time_x' section
-  # time_b:
-  #   dateTime_start: '7.10.2021 - 04:50' 
-  #   dateTime_end: '7.10.2021 - 20:21' 
 
 
 ################## SHEET ČASOVÉ ÚDAJE #################
