@@ -33,10 +33,10 @@ sheet_number_of_travels:
     dateTime_start: '7.10.2021 - 04:50' 
     dateTime_end: '7.10.2021 - 20:21' 
 
-  # for more times just add new 'time_x' section
-  time_b:
-    dateTime_start: '7.10.2021 - 04:50' 
-    dateTime_end: '7.10.2021 - 20:21' 
+  # # for more times just add new 'time_x' section
+  # time_b:
+  #   dateTime_start: '7.10.2021 - 04:50' 
+  #   dateTime_end: '7.10.2021 - 20:21' 
 
 
 ################## SHEET ČASOVÉ ÚDAJE #################

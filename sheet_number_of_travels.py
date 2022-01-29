@@ -9,7 +9,7 @@ def createSheetNumberOfTravels(df, xlsxWriter, params):
     def createSheetNumberOfTravelsInner(sheet_name_in, time_in: TimeStruct):
         data = computeData(df, time_in)
         writeData(xlsxWriter, sheet_name_in, data, N)
-        writeTemplate(xlsxWriter, sheet_name_in, data, N)
+        writeTemplate(xlsxWriter, sheet_name_in, data, N, time_in)
 
     N = params['number_of_cameras']
     sheet_name = 'Počty průjezdů'
@@ -79,8 +79,8 @@ def computeData(df, time):
 
 def writeData(xlsxWriter, sheet_name, data, N):
     # Position the dataframes in the worksheet.
-    data['data'].to_excel(xlsxWriter, sheet_name=sheet_name, startrow=2, startcol=1, header=False, index=False)
-    data['dataCheck'].T.to_excel(xlsxWriter, sheet_name=sheet_name, startrow=len(data["SPZs"]) + 5, startcol=1,
+    data['data'].to_excel(xlsxWriter, sheet_name=sheet_name, startrow=5, startcol=1, header=False, index=False)
+    data['dataCheck'].T.to_excel(xlsxWriter, sheet_name=sheet_name, startrow=len(data["SPZs"]) + 8, startcol=1,
                                  header=False, index=False)
 
     workbook = xlsxWriter.book
@@ -121,29 +121,25 @@ def writeData(xlsxWriter, sheet_name, data, N):
     cond_good = {'type': 'cell', 'criteria': '<>', 'value': 0, 'format': wrong_format}
     cond_wrong = {'type': 'cell', 'criteria': '=', 'value': 0, 'format': good_format}
 
-    # this should not be conditional formatting, but i could not found way how to do it properly...
+    # this should not be conditional formatting, but I could not find way how to do it properly...
 
-    worksheet.conditional_format(2, 1, len(data['SPZs']) + 1, N * 2, {'type': 'cell',
+    worksheet.conditional_format(5, 1, len(data['SPZs']) + 4, N * 2, {'type': 'cell',
                                                                       'criteria': 'greater than',
                                                                       'value': -1,
                                                                       'format': yellow_format})
 
-    worksheet.conditional_format(len(data["SPZs"]) + 5, 1, len(data['SPZs']) + 5, N * 2, {'type': 'cell',
+    worksheet.conditional_format(len(data["SPZs"]) + 8, 1, len(data['SPZs']) + 8, N * 2, {'type': 'cell',
                                                                                           'criteria': 'greater than',
                                                                                           'value': -1,
                                                                                           'format': xd_format})
 
-    worksheet.conditional_format(len(data["SPZs"]) + 6, 1, len(data['SPZs']) + 6, N * 2, cond_good)
-    worksheet.conditional_format(len(data["SPZs"]) + 6, 1, len(data['SPZs']) + 6, N * 2, cond_wrong)
+    worksheet.conditional_format(len(data["SPZs"]) + 9, 1, len(data['SPZs']) + 9, N * 2, cond_good)
+    worksheet.conditional_format(len(data["SPZs"]) + 9, 1, len(data['SPZs']) + 9, N * 2, cond_wrong)
 
 
-def writeTemplate(xlsxWriter, sheet_name, data, N):
+def writeTemplate(xlsxWriter, sheet_name, data, N, time: TimeStruct):
     workbook = xlsxWriter.book
     worksheet = xlsxWriter.sheets[sheet_name]
-
-    # column width and formats
-    worksheet.set_column(1, N * 2 + 4, 13)
-    worksheet.set_column(0, 0, 16)
 
     # formats
     yellow_format = workbook.add_format({
@@ -182,29 +178,37 @@ def writeTemplate(xlsxWriter, sheet_name, data, N):
         'num_format': '0.00%'
     })
 
+    # column width and formats
+    worksheet.set_column(1, N * 2 + 4, 13)
+    worksheet.set_column(0, 0, 16)
+
+    # write first and second row
+    worksheet.merge_range(0, 0, 0, N * 2 + 1, "Počty průjezdů jednotlivých stanovišť", first_line_format)
+    worksheet.merge_range(1, 0, 1, N * 2 + 1, f"Vybraný čas: {time.fullSheetName}", first_line_format)
+
     # write first line
-    worksheet.write(0, 0, "Počet průjezdů", first_line_format)
+    worksheet.write(3, 0, "Počet průjezdů", first_line_format)
     for i in range(1, N + 1):
         text = f'Sčít. stanoviště {i}'
-        worksheet.merge_range(0, i * 2 - 1, 0, i * 2, text, first_line_format)
+        worksheet.merge_range(3, i * 2 - 1, 3, i * 2, text, first_line_format)
 
     # write second line
-    worksheet.write(1, 0, "s totožnou SPZ", second_line_format)
+    worksheet.write(4, 0, "s totožnou SPZ", second_line_format)
     for i in range(1, N + 1):
         text_do = f'Do města ({i * 2 - 1})'
         text_z = f'Z města ({i * 2})'
-        worksheet.write(1, i * 2 - 1, text_do, second_line_format)
-        worksheet.write(1, i * 2, text_z, second_line_format)
+        worksheet.write(4, i * 2 - 1, text_do, second_line_format)
+        worksheet.write(4, i * 2, text_z, second_line_format)
 
     # write first/second line
-    worksheet.merge_range(0, N * 2 + 1, 1, N * 2 + 1, 'Celkem [počet]', second_line_format)
-    worksheet.merge_range(0, N * 2 + 2, 1, N * 2 + 2, 'Poměr', second_line_format)
-    worksheet.merge_range(0, N * 2 + 3, 1, N * 2 + 3, 'Celkový počet unikátních SPZ ', second_line_format)
-    worksheet.write(2, N * 2 + 3, data['uniqueSPZ'], yellow_format)
+    worksheet.merge_range(3, N * 2 + 1, 4, N * 2 + 1, 'Celkem [počet]', second_line_format)
+    worksheet.merge_range(3, N * 2 + 2, 4, N * 2 + 2, 'Poměr', second_line_format)
+    worksheet.merge_range(3, N * 2 + 3, 4, N * 2 + 3, 'Celkový počet unikátních SPZ ', second_line_format)
+    worksheet.write(5, N * 2 + 3, data['uniqueSPZ'], yellow_format)
 
     # write data lines
     for i, spz in enumerate(data['SPZs']):
-        worksheet.write(2 + i, 0, spz, second_line_format)
+        worksheet.write(5 + i, 0, spz, second_line_format)
 
         a = xwu.xl_col_to_name(1)
         b = xwu.xl_col_to_name(N * 2)
@@ -212,18 +216,18 @@ def writeTemplate(xlsxWriter, sheet_name, data, N):
 
         # solve case when spz is unknown
         if spz == 'unknown':
-            worksheet.write(2 + i, N * 2 + 1, f'=SUM({a}{3 + i}:{b}{3 + i}) * 1', second_line_format)
-            worksheet.write(2 + i, N * 2 + 2, f'={c}{3 + i}/${c}${len(data["SPZs"]) + 4}', percent_format)
+            worksheet.write(5 + i, N * 2 + 1, f'=SUM({a}{6 + i}:{b}{6 + i}) * 1', second_line_format)
+            worksheet.write(5 + i, N * 2 + 2, f'={c}{6 + i}/${c}${len(data["SPZs"]) + 7}', percent_format)
         else:
-            worksheet.write(2 + i, N * 2 + 1, f'=SUM({a}{3 + i}:{b}{3 + i}) * A{3 + i}', second_line_format)
-            worksheet.write(2 + i, N * 2 + 2, f'={c}{3 + i}/${c}${len(data["SPZs"]) + 4}', percent_format)
+            worksheet.write(5 + i, N * 2 + 1, f'=SUM({a}{6 + i}:{b}{6 + i}) * A{6 + i}', second_line_format)
+            worksheet.write(5 + i, N * 2 + 2, f'={c}{6 + i}/${c}${len(data["SPZs"]) + 7}', percent_format)
 
     # write last line, not anymore, xd
-    worksheet.write(len(data['SPZs']) + 3, 0, "Celkem [počet]", second_line_format)
+    worksheet.write(len(data['SPZs']) + 6, 0, "Celkem [počet]", second_line_format)
     for i in range(N * 2):
         a = xwu.xl_col_to_name(i + 1)
-        worksheet.write(len(data['SPZs']) + 3, i + 1,
-                        f'=SUMPRODUCT({a}{3}:{a}{len(data["SPZs"]) + 1},A{3}:A{len(data["SPZs"]) + 1}) + {a}{len(data["SPZs"]) + 2}',
+        worksheet.write(len(data['SPZs']) + 6, i + 1,
+                        f'=SUMPRODUCT({a}{6}:{a}{len(data["SPZs"]) + 4},A{6}:A{len(data["SPZs"]) + 4}) + {a}{len(data["SPZs"]) + 5}',
                         second_line_format)
 
     for i in range(N * 2, N * 2 + 2):
@@ -233,13 +237,13 @@ def writeTemplate(xlsxWriter, sheet_name, data, N):
         if i == N * 2 + 1:
             form = percent_format
 
-        worksheet.write(len(data["SPZs"]) + 3, i + 1, f'=SUM({a}{3}:{a}{len(data["SPZs"]) + 2})', form)
+        worksheet.write(len(data["SPZs"]) + 6, i + 1, f'=SUM({a}{6}:{a}{len(data["SPZs"]) + 5})', form)
 
-    worksheet.write(len(data["SPZs"]) + 5, 0, "Cílový součet [počet]", second_line_format)
-    worksheet.write(len(data["SPZs"]) + 6, 0, "Validace dat", second_line_format)
+    worksheet.write(len(data["SPZs"]) + 8, 0, "Cílový součet [počet]", second_line_format)
+    worksheet.write(len(data["SPZs"]) + 9, 0, "Validace dat", second_line_format)
 
     for i in range(N * 2):
         a = xwu.xl_col_to_name(i + 1)
 
-        worksheet.write(len(data["SPZs"]) + 6, i + 1, f'={a}{len(data["SPZs"]) + 4} - {a}{len(data["SPZs"]) + 6}',
+        worksheet.write(len(data["SPZs"]) + 9, i + 1, f'={a}{len(data["SPZs"]) + 7} - {a}{len(data["SPZs"]) + 9}',
                         second_line_format)
