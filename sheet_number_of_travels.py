@@ -1,3 +1,4 @@
+import numpy as np
 import xlsxwriter as xw
 import xlsxwriter.utility as xwu
 import pandas as pd
@@ -7,7 +8,7 @@ from TimeStruct import TimeStruct
 
 def createSheetNumberOfTravels(df, xlsxWriter, params):
     def createSheetNumberOfTravelsInner(sheet_name_in, time_in: TimeStruct):
-        data = computeData(df, time_in)
+        data = computeData(df, time_in, N)
         writeData(xlsxWriter, sheet_name_in, data, N)
         writeTemplate(xlsxWriter, sheet_name_in, data, N, time_in)
 
@@ -20,14 +21,14 @@ def createSheetNumberOfTravels(df, xlsxWriter, params):
         createSheetNumberOfTravelsInner(time.findUnusedSheetName(sheet_name, xlsxWriter), time)
 
 
-def computeData(df, time):
+def computeData(df, time, N):
     # filter time
     df = df.set_index('Capture_time').sort_index()
     df = df[time.dateTimeStart: time.dateTimeEnd]
     df = df.reset_index()
 
     # compute number of items on every input sheet, for data validation
-    dataCheck = df.groupby(by='Direction').count().drop(columns=['License_plate'])
+    dataCheck = getDataCheckColumn(df, N)
 
     uniqueSPZ = df['License_plate'].nunique()
 
@@ -38,7 +39,7 @@ def computeData(df, time):
     }
 
     # add fake column to be removed later, order of operations should be kept because SPZs ordering matter
-    for spz in range(1, 11):  # always show atleast 10 SPZs
+    for spz in range(1, 11):  # always show at least 10 SPZs
         dick['Direction'].append('remove me')
         dick['SPZ'].append(spz)
         dick['Count'].append(0)
@@ -57,11 +58,18 @@ def computeData(df, time):
         temp = temp.groupby(by='License_plate').count().groupby(by='Capture_time').count()
         temp = temp.reset_index()
 
-        # column names lost their oringal meaning...
+        # column names lost their original meaning...
         for spz, count in zip(temp['Capture_time'], temp['Direction']):
             dick['Direction'].append(direction)
             dick['SPZ'].append(spz)
             dick['Count'].append(count)
+
+    # add data even when there were none loaded
+    missing = np.setdiff1d(list(range(1, N*2 + 1)), df['Direction'].unique())
+    for direction in missing:
+        dick['Direction'].append(direction)
+        dick['SPZ'].append(1)
+        dick['Count'].append(0)
 
     out = pd.DataFrame.from_dict(dick)
     SPZs = out['SPZ'].unique()
@@ -73,6 +81,21 @@ def computeData(df, time):
     out = out.drop(columns=['remove me'])
 
     return {'data': out, 'SPZs': SPZs, 'dataCheck': dataCheck, 'uniqueSPZ': uniqueSPZ}
+
+
+def getDataCheckColumn(df, N):
+    dataCheck = df.groupby(by='Direction').count().drop(columns=['License_plate'])
+
+    fake_df = {'Direction': [], 'Capture_time': []}
+    for i in range(1, N * 2 + 1):
+        fake_df['Capture_time'].append(0)
+        fake_df['Direction'].append(i)
+
+    fake_df = pd.DataFrame.from_dict(fake_df)
+    fake_df = fake_df.set_index('Direction')
+    fake_df.update(dataCheck)
+
+    return fake_df
 
 
 def writeData(xlsxWriter, sheet_name, data, N):
