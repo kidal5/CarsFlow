@@ -19,7 +19,7 @@ def createSheetTimes(df, xlsxWriter, params):
 
         data = computeData(df, selectedDirections, time)
         writeTemplate(workbook, worksheet, selectedDirections, time, currentColumnShift)
-        writeData(workbook, worksheet, data, currentColumnShift)
+        writeData(workbook, worksheet, selectedDirections, data, currentColumnShift)
         currentColumnShift = currentColumnShift + len(selectedDirections) * 2 + 2
 
 
@@ -83,7 +83,7 @@ def computeData(df, selectedDirections, time: TimeStruct):
 
     # convert capture time to string, so excel writer do not messes it up...
     for i in range(0, len(selectedDirections)):
-        temp[f'Capture_time_{i}'] = temp[f'Capture_time_{i}'].dt.strftime('%H:%M:%S')
+        temp[f'Capture_time_{i}'] = temp[f'Capture_time_{i}'].dt.strftime('%d/%m/%Y - %H:%M:%S')
 
     # reorder columns
     columns = ['License_plate'] + [f'Capture_time_{i}' for i in range(len(selectedDirections))] \
@@ -93,7 +93,7 @@ def computeData(df, selectedDirections, time: TimeStruct):
     return temp
 
 
-def writeData(workbook, worksheet, data, colShift=10):
+def writeData(workbook, worksheet, selectedDirections, data, colShift=10):
     SPZ_format = workbook.add_format({
         'border': 1,
         'align': 'center',
@@ -125,7 +125,7 @@ def writeData(workbook, worksheet, data, colShift=10):
 
     # write sums
     for row in range(data.shape[0]):
-        a = xwu.xl_col_to_name(colShift + 1)
+        a = xwu.xl_col_to_name(colShift + 1 + len(selectedDirections))
         b = xwu.xl_col_to_name(colShift + data.shape[1] - 1)
 
         worksheet.write(row + 3, colShift + data.shape[1], f'=SUM({a}{row + 4}:{b}{row + 4})', SUM_format)
@@ -168,7 +168,9 @@ def writeTemplate(workbook, worksheet, selectedDirections, time: TimeStruct, col
 
     # write header
     worksheet.set_row(0, 40)
-    worksheet.set_column(colShift, colShift + len(selectedDirections) * 2, 10)
+    worksheet.set_column(colShift, colShift + len(selectedDirections) * 2, 10)  # make size of all columns to 10
+    worksheet.set_column(colShift + 1, colShift + len(selectedDirections), 20)  # make size of datetime columns to 20
+
     header_text = "Označené směry " + ", ".join([str(i) for i in selectedDirections])
     header_text = f'{header_text}\n{time.fullSheetName}'
 
