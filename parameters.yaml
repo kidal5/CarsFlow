@@ -1,25 +1,45 @@
 
+###################### PARAMETERS ######################
+## add or update to change behavior of script         ##
+########################################################
 
-# input and output files
+################## DATETIME CONVENTIONS ################
+## both start and end dateTime must have this format  ##
+## dd.mm.YYYY - HH:MM, f.e: 6.10.2021 - 23:59         ##
+## both times (start and end) are inclusive           ##
+########################################################
+
+################# INPUT AND OUTPUT FILES ###############
 input_file: 'test/input.xlsx'
 output_file: 'out.xlsx'
 number_of_cameras: 9 # number of physical cameras, aka measure points 
 
-# all possible parameters to Počty vozidel sheet
+################# SHEET POČTY VOZIDEL ###############
 # all day (aka 00:00 -> 23:59) is created by default
 sheet_cars_count: 
   time_a:
-    time_start: '04:50' #inclusive, time format is HH:MM
-    time_end: '04:50' #inclusive
+    dateTime_start: '7.10.2021 - 04:50' 
+    dateTime_end: '7.10.2021 - 04:50' 
 
-  # Or you can specify start and end date. Like in example below. 
-  time_b: # for more times just add new 'time_x' section
-    dateTime_start: '6.10.2021 - 00:01' # inclusive, dateTime format is ~dd.mm.YYYY - HH:MM~ 
-    dateTime_end: '6.10.2021 - 23:59' # inclusive
-  
-# there are no parameters for Počty průjezdů sheet
+  # for more times just add new 'time_x' section
+  time_b: 
+    dateTime_start: '6.10.2021 - 00:01'
+    dateTime_end: '6.10.2021 - 23:59'
 
-# all possible parameters to Časové údaje sheet
+################# SHEET POČTY PRŮJEZDŮ ###############
+# all day (aka 00:00 -> 23:59) is created by default
+sheet_number_of_travels:
+  time_a:
+    dateTime_start: '7.10.2021 - 04:50' 
+    dateTime_end: '7.10.2021 - 20:21' 
+
+  # for more times just add new 'time_x' section
+  time_b:
+    dateTime_start: '7.10.2021 - 04:50' 
+    dateTime_end: '7.10.2021 - 20:21' 
+
+
+################## SHEET ČASOVÉ ÚDAJE #################
 sheet_times: 
   time_a: 
     selected_directions: # full indexing format, aka index 6 corresponds to camera 3 looking backwards
@@ -27,16 +47,15 @@ sheet_times:
       - 3
       - 10
       - 12
-    time_start: '00:00'
-    time_end: '23:59'
+    dateTime_start: '7.10.2021 - 00:00'
+    dateTime_end: '7.10.2021 - 23:59'
 
-  # Or you can specify start and end date. Like in example below. 
   time_b: # for more times just add new 'time_x' section
     selected_directions: 
       - 1
       - 12
-    dateTime_start: '6.10.2021 - 00:01' # inclusive, dateTime format is ~dd.mm.YYYY - HH:MM~ 
-    dateTime_end: '7.10.2021 - 18:00' # inclusive
+    dateTime_start: '6.10.2021 - 00:01'
+    dateTime_end: '7.10.2021 - 18:00'
 
 
   

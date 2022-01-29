@@ -2,17 +2,32 @@ import xlsxwriter as xw
 import xlsxwriter.utility as xwu
 import pandas as pd
 
+from TimeStruct import TimeStruct
+
 
 def createSheetNumberOfTravels(df, xlsxWriter, params):
+    def createSheetNumberOfTravelsInner(sheet_name_in, time_in: TimeStruct):
+        data = computeData(df, time_in)
+        writeData(xlsxWriter, sheet_name_in, data, N)
+        writeTemplate(xlsxWriter, sheet_name_in, data, N)
+
     N = params['number_of_cameras']
     sheet_name = 'Počty průjezdů'
+    createSheetNumberOfTravelsInner(sheet_name, TimeStruct.createFromStartAndEndTime('00:00', '23:59', df))
 
-    data = computeData(df)
-    writeData(xlsxWriter, sheet_name, data, N)
-    writeTemplate(xlsxWriter, sheet_name, data, N)
+    for item in params['sheet_number_of_travels'].values():
+        time = TimeStruct.createFromDict(item, df)
+
+        sheet_name_edited = f'{sheet_name} {time.sheetName}'
+        createSheetNumberOfTravelsInner(sheet_name_edited, time)
 
 
-def computeData(df):
+def computeData(df, time):
+    # filter time
+    df = df.set_index('Capture_time').sort_index()
+    df = df[time.dateTimeStart: time.dateTimeEnd]
+    df = df.reset_index()
+
     # compute number of items on every input sheet, for data validation
     dataCheck = df.groupby(by='Direction').count().drop(columns=['License_plate'])
 
