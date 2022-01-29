@@ -236,9 +236,13 @@ def writeTemplate(xlsxWriter, sheet_name, params, time: TimeStruct, addDataCheck
     # write fourth row and second column
     worksheet.write(4, 0, "", orange_format)
     worksheet.write(4, 1, "Směr", blue_format)
-    for i in range(N * 2):
-        worksheet.write(4, i + 2, i + 1, blue_format)
-        worksheet.write(i + 5, 1, i + 1, blue_format)
+    for i in range(N):
+        text = f'{i+1}A ({2*i + 1})'
+        worksheet.write(4, 2*i + 2, text, blue_format)
+        worksheet.write(2*i + 5, 1, text, blue_format)
+        text = f'{i+1}B ({2*i + 2})'
+        worksheet.write(4, 2*i + 3, text, blue_format)
+        worksheet.write(2*i + 6, 1, text, blue_format)
 
     # write single cars template
     worksheet.merge_range(N * 2 + 6, 0, N * 2 + 6, N + 1, "Pouze DO města - bez unknown", first_line_format)
@@ -257,10 +261,10 @@ def writeTemplate(xlsxWriter, sheet_name, params, time: TimeStruct, addDataCheck
     worksheet.merge_range(N * 2 + 20, 0, N * 2 + 20, 1, "Z města", orange_format)
 
     for i in range(N):
-        worksheet.write(N * 2 + 7, i + 2, f'{i + 1} ({i * 2 + 1})', orange_format)
-        worksheet.write(N * 2 + 11, i + 2, f'{i + 1} ({i * 2 + 2})', orange_format)
-        worksheet.write(N * 2 + 15, i + 2, f'{i + 1} ({i * 2 + 1})', orange_format)
-        worksheet.write(N * 2 + 19, i + 2, f'{i + 1} ({i * 2 + 2})', orange_format)
+        worksheet.write(N * 2 + 7, i + 2, f'{i + 1}A ({i * 2 + 1})', orange_format)
+        worksheet.write(N * 2 + 11, i + 2, f'{i + 1}B ({i * 2 + 2})', orange_format)
+        worksheet.write(N * 2 + 15, i + 2, f'{i + 1}A ({i * 2 + 1})', orange_format)
+        worksheet.write(N * 2 + 19, i + 2, f'{i + 1}B ({i * 2 + 2})', orange_format)
 
     # write data validity checks
     if addDataCheck:
