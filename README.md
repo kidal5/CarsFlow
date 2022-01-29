@@ -21,3 +21,8 @@ You can create more ```xxx.yaml``` files and switch between them, no need to hav
   - Added possibility to specify Date for filtering, previously was just Time
   - Separated ```unknown``` License Plates in Počty vozidel sheet
 
+- 29.01.2022
+  - Added date to Časové údaje sheet
+  - Added dateTime filtering to Počty průjezdů sheet
+  - Fixed errors, when some input sheets were empty - aka no camera data
+  - Updated naming scheme of sheets, to avoid duplicates
