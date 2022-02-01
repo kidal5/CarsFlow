@@ -79,7 +79,7 @@ def computeData(df, selectedDirections, time: TimeStruct):
 
     # convert time columns to better number
     for i in range(0, len(selectedDirections) - 1):
-        temp[f'Diff_time_{i}'] = temp[f'Diff_time_{i}'].dt.seconds / 60
+        temp[f'Diff_time_{i}'] = temp[f'Diff_time_{i}'].dt.total_seconds() / 60
 
     # convert capture time to string, so excel writer do not messes it up...
     for i in range(0, len(selectedDirections)):

@@ -45,10 +45,8 @@ sheet_times:
     selected_directions: # full indexing format, aka index 6 corresponds to camera 3 looking backwards
       - 1
       - 3
-      - 10
-      - 12
-    dateTime_start: '7.10.2021 - 00:00'
-    dateTime_end: '7.10.2021 - 23:59'
+    dateTime_start: '2.11.2021 - 00:00'
+    dateTime_end: '4.11.2021 - 23:59'
 
   time_b: # for more times just add new 'time_x' section
     selected_directions: 
