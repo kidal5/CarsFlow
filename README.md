@@ -8,7 +8,7 @@
 7. Type ```pip install -r requirements.txt``` into cmd and hit enter.
 
 ## Run program
-1. Edit ```parameters.yaml``` file to match your needs. This yaml file is just ordinary text file, so it can be opened with every text processor. Just be aware, that yaml datatype uses indentation for data validation and wouldn't work if indentation is broken! I recommend using special text editor like [Notepadd++](https://notepad-plus-plus.org/downloads/) or [VS Code](https://code.visualstudio.com/Download) to handle correct indentation for you.  
+1. Edit ```parameters.yaml``` file to match your needs. This yaml file is just ordinary text file, so it can be opened with every text processor. Just be aware, that yaml datatype uses indentation for data validation and wouldn't work if indentation is broken! I recommend using special text editor like [Notepad++](https://notepad-plus-plus.org/downloads/) or [VS Code](https://code.visualstudio.com/Download) to handle correct indentation for you.  
 3. Open cmd in working folder.
 4. Run program by typing ```python .\main.py``` into cmd and hit enter.
 5. Profit
