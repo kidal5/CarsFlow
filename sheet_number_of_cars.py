@@ -30,7 +30,7 @@ def computeData(df, params, time: TimeStruct, addDataCheck=True):
 
     # add fake data to force dataframe layout, aka have at least one entry for every possible combination
     fake_df = createFakeDataset(params['number_of_cameras'])
-    df = df.append(fake_df, ignore_index=True)
+    df = pd.concat([df, fake_df], ignore_index=True)
 
     # separate dataset into two parts based on license plate count
     plate_counts = df["License_plate"].value_counts()
@@ -42,7 +42,7 @@ def computeData(df, params, time: TimeStruct, addDataCheck=True):
 
     # make sense only in full dataset...
     if addDataCheck:
-        df_multiple = df_multiple.append(createFakeEndStopForDataValidityCheck(df_multiple))
+        df_multiple = pd.concat([df_multiple, createFakeEndStopForDataValidityCheck(df_multiple)])
 
     # create another dataset moved by one and merge it. Aka create pairs of all following directions
     df_multiple = df_multiple.sort_values(by=['License_plate', 'Capture_time']).reset_index(drop=True)

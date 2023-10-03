@@ -11,7 +11,7 @@ def loadExcel(fname, N):
     sheet_names_place_direction = getSheetNamesPlaceDirections(N)
     sheet_names_place_combined_index = getSheetNamesPlaceCombinedIndexes(N)
 
-    df = None
+    dfs = []
 
     for name, index, direction, combined_index in zip(sheet_names, sheet_names_place_index, sheet_names_place_direction,
                                                       sheet_names_place_combined_index):
@@ -19,11 +19,10 @@ def loadExcel(fname, N):
         df_read['Direction'] = combined_index
         df_read = df_read.rename(columns={'License Plate Number': 'License_plate', 'Capture Time': 'Capture_time'})
 
-        if df is None:
-            df = df_read
-        else:
-            df = df.append(df_read)
+        if not df_read.empty:
+            dfs.append(df_read)
 
+    df = pd.concat(dfs)
     df = df.reset_index(drop=True)
     df = df.astype({'License_plate': 'str'})
 

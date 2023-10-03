@@ -45,7 +45,7 @@ def computeData(df, selectedDirections, time: TimeStruct):
         fake_data['Capture_time'].append(pd.to_datetime(f'00:{i:02d}'))
         fake_data['Direction'].append(dire)
     fake_df = pd.DataFrame().from_dict(fake_data)
-    temp = temp.append(fake_df, ignore_index=True)
+    temp = pd.concat([df, fake_df], ignore_index=True)
 
     # create wide format
     temp = temp.sort_values(['License_plate', 'Capture_time'], ascending=True).reset_index(drop=True)
