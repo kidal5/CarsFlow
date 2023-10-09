@@ -19,6 +19,9 @@ def loadExcel(fname, N):
         df_read['Direction'] = combined_index
         df_read = df_read.rename(columns={'License Plate Number': 'License_plate', 'Capture Time': 'Capture_time'})
 
+        # drop empty rows
+        df_read = df_read[~df_read['Capture_time'].isnull()]
+
         if not df_read.empty:
             dfs.append(df_read)
 
