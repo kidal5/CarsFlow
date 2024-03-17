@@ -29,4 +29,5 @@ You can create more ```xxx.yaml``` files and switch between them, no need to hav
 
 - 17.03.2024
   - Added ```vehicle category``` filtering to all sheets
+  - Added basic Dataset info (number of records, possible categories, ...) logging 
   - Fixed error in sheet Časové údaje, where time-based filtering were not applied correctly
