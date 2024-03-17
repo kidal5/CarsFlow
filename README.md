@@ -28,5 +28,5 @@ You can create more ```xxx.yaml``` files and switch between them, no need to hav
   - Updated naming scheme of sheets, to avoid duplicates
 
 - 17.03.2024
-  - Added vehicle cateogry filtering to all sheets
+  - Added ```vehicle category``` filtering to all sheets
   - Fixed error in sheet Časové údaje, where time-based filtering were not applied correctly
