@@ -82,7 +82,7 @@ sheet_times:
   output_d:
     dateTime_start: '19.9.2023 - 00:00'
     dateTime_end: '19.9.2023 - 23:59'
-#    selected_categories: can be omited to select all categories
+#    selected_categories: can be omitted to select all categories
     selected_directions: [1,12]
 
   
