@@ -26,3 +26,7 @@ You can create more ```xxx.yaml``` files and switch between them, no need to hav
   - Added dateTime filtering to Počty průjezdů sheet
   - Fixed errors, when some input sheets were empty - aka no camera data
   - Updated naming scheme of sheets, to avoid duplicates
+
+- 17.03.2024
+  - Added vehicle cateogry filtering to all sheets
+  - Fixed error in sheet Časové údaje, where time-based filtering were not applied correctly
