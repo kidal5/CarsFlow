@@ -16,14 +16,17 @@ def createSheetTimes(df, xlsxWriter, params):
         selectedDirections = item['selected_directions']
 
         time = TimeStruct.createFromDict(item, df)
+        sc = item.get('selected_categories', [])
+        if len(sc) == 0:
+            sc = None
 
-        data = computeData(df, selectedDirections, time)
-        writeTemplate(workbook, worksheet, selectedDirections, time, currentColumnShift)
+        data = computeData(df, selectedDirections, time, sc)
+        writeTemplate(workbook, worksheet, selectedDirections, time, sc, currentColumnShift)
         writeData(workbook, worksheet, selectedDirections, data, currentColumnShift)
         currentColumnShift = currentColumnShift + len(selectedDirections) * 2 + 2
 
 
-def computeData(df, selectedDirections, time: TimeStruct):
+def computeData(df, selectedDirections, time: TimeStruct, selectedCategories):
     combinedIndexesString = "_".join([f'{i}' for i in selectedDirections])
 
     def checkForCorrectDirections(x):
@@ -36,6 +39,8 @@ def computeData(df, selectedDirections, time: TimeStruct):
     # filter time
     temp = temp.set_index('Capture_time').sort_index()
     temp = temp[time.dateTimeStart: time.dateTimeEnd]
+    if selectedCategories is not None:
+        temp = temp[temp['Vehicle_category'].isin(selectedCategories)]
     temp = temp.reset_index()
 
     # add fake data to assure that everything goes smoothly
@@ -45,7 +50,7 @@ def computeData(df, selectedDirections, time: TimeStruct):
         fake_data['Capture_time'].append(pd.to_datetime(f'00:{i:02d}'))
         fake_data['Direction'].append(dire)
     fake_df = pd.DataFrame().from_dict(fake_data)
-    temp = pd.concat([df, fake_df], ignore_index=True)
+    temp = pd.concat([temp, fake_df], ignore_index=True)
 
     # create wide format
     temp = temp.sort_values(['License_plate', 'Capture_time'], ascending=True).reset_index(drop=True)
@@ -81,7 +86,7 @@ def computeData(df, selectedDirections, time: TimeStruct):
     for i in range(0, len(selectedDirections) - 1):
         temp[f'Diff_time_{i}'] = temp[f'Diff_time_{i}'].dt.total_seconds() / 60
 
-    # convert capture time to string, so excel writer do not messes it up...
+    # convert capture time to string, so excel writer do not mess it up...
     for i in range(0, len(selectedDirections)):
         temp[f'Capture_time_{i}'] = temp[f'Capture_time_{i}'].dt.strftime('%d/%m/%Y - %H:%M:%S')
 
@@ -131,7 +136,7 @@ def writeData(workbook, worksheet, selectedDirections, data, colShift=10):
         worksheet.write(row + 3, colShift + data.shape[1], f'=SUM({a}{row + 4}:{b}{row + 4})', SUM_format)
 
 
-def writeTemplate(workbook, worksheet, selectedDirections, time: TimeStruct, colShift=10):
+def writeTemplate(workbook, worksheet, selectedDirections, time: TimeStruct, selectedCategories, colShift=10):
     header_format = workbook.add_format({
         'bold': 1,
         'align': 'center',
@@ -167,12 +172,13 @@ def writeTemplate(workbook, worksheet, selectedDirections, time: TimeStruct, col
     })
 
     # write header
-    worksheet.set_row(0, 40)
+    worksheet.set_row(0, 60)
     worksheet.set_column(colShift, colShift + len(selectedDirections) * 2, 10)  # make size of all columns to 10
     worksheet.set_column(colShift + 1, colShift + len(selectedDirections), 20)  # make size of datetime columns to 20
 
     header_text = "Označené směry " + ", ".join([str(i) for i in selectedDirections])
-    header_text = f'{header_text}\n{time.fullSheetName}'
+    categoriesStr = f'Vybrané typy vozidel: {", ".join(selectedCategories) if selectedCategories is not None else "Všechny kategorie"}'
+    header_text = f'{header_text}\n{time.fullSheetName}\n{categoriesStr}'
 
     worksheet.merge_range(0, colShift, 0, colShift + len(selectedDirections) * 2, header_text, header_format)
     worksheet.merge_range(1, colShift, 2, colShift, "SPZ", SPZ_format)
