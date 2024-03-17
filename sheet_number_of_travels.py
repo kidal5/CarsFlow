@@ -7,10 +7,10 @@ from TimeStruct import TimeStruct
 
 
 def createSheetNumberOfTravels(df, xlsxWriter, params):
-    def createSheetNumberOfTravelsInner(sheet_name_in, time_in: TimeStruct):
-        data = computeData(df, time_in, N)
+    def createSheetNumberOfTravelsInner(sheet_name_in, time_in: TimeStruct, selectedCategories=None):
+        data = computeData(df, time_in, N, selectedCategories)
         writeData(xlsxWriter, sheet_name_in, data, N)
-        writeTemplate(xlsxWriter, sheet_name_in, data, N, time_in)
+        writeTemplate(xlsxWriter, sheet_name_in, data, N, time_in, selectedCategories)
 
     N = params['number_of_cameras']
     sheet_name = 'Počty průjezdů'
@@ -18,13 +18,19 @@ def createSheetNumberOfTravels(df, xlsxWriter, params):
 
     for item in params['sheet_number_of_travels'].values():
         time = TimeStruct.createFromDict(item, df)
-        createSheetNumberOfTravelsInner(time.findUnusedSheetName(sheet_name, xlsxWriter), time)
+        sc = item.get('selected_categories', [])
+        if len(sc) == 0:
+            sc = None
+
+        createSheetNumberOfTravelsInner(time.findUnusedSheetName(sheet_name, xlsxWriter), time, sc)
 
 
-def computeData(df, time, N):
+def computeData(df, time: TimeStruct, N, selectedCategories):
     # filter time
     df = df.set_index('Capture_time').sort_index()
     df = df[time.dateTimeStart: time.dateTimeEnd]
+    if selectedCategories is not None:
+        df = df[df['Vehicle_category'].isin(selectedCategories)]
     df = df.reset_index()
 
     # compute number of items on every input sheet, for data validation
@@ -158,7 +164,7 @@ def writeData(xlsxWriter, sheet_name, data, N):
     worksheet.conditional_format(len(data["SPZs"]) + 9, 1, len(data['SPZs']) + 9, N * 2, cond_wrong)
 
 
-def writeTemplate(xlsxWriter, sheet_name, data, N, time: TimeStruct):
+def writeTemplate(xlsxWriter, sheet_name, data, N, time: TimeStruct, selectedCategories):
     workbook = xlsxWriter.book
     worksheet = xlsxWriter.sheets[sheet_name]
 
@@ -205,7 +211,8 @@ def writeTemplate(xlsxWriter, sheet_name, data, N, time: TimeStruct):
 
     # write first and second row
     worksheet.merge_range(0, 0, 0, N * 2 + 1, "Počty průjezdů jednotlivých stanovišť", first_line_format)
-    worksheet.merge_range(1, 0, 1, N * 2 + 1, f"Vybraný čas: {time.fullSheetName}", first_line_format)
+    categoriesStr = ", ".join(selectedCategories) if selectedCategories is not None else "Všechny kategorie"
+    worksheet.merge_range(1, 0, 1, N * 2 + 1, f"Vybraný čas: {time.fullSheetName}; Vybrané typy vozidel: {categoriesStr}", first_line_format)
 
     # write first line
     worksheet.write(3, 0, "Počet průjezdů", first_line_format)

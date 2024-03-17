@@ -44,13 +44,26 @@ sheet_cars_count:
 # all day (aka 00:00 -> 23:59) is created by default
 sheet_number_of_travels:
   output_a:
-    dateTime_start: '7.10.2021 - 04:50' 
-    dateTime_end: '7.10.2021 - 20:21' 
+    dateTime_start: '19.9.2023 - 00:00'
+    dateTime_end: '19.9.2023 - 23:59'
+
+    # keep only rows, whose `Kategorie` value is any of following
+    selected_categories: ['OA', 'BUS', 'LN', 'TN']
 
   # for more different outputs (with different times or category selectors) just add new 'output_x' section
   output_b:
-    dateTime_start: '7.10.2021 - 04:50' 
-    dateTime_end: '7.10.2021 - 20:21' 
+    dateTime_start: '19.9.2023 - 4:50'
+    dateTime_end: '19.9.2023 - 10:00'
+
+    # when `selected_categories` is omitted or empty, all categories are selected
+    selected_categories: []
+
+  output_c:
+    dateTime_start: '19.9.2023 - 00:00'
+    dateTime_end: '19.9.2023 - 23:59'
+
+    # keep only rows, whose `Kategorie` value is any of following
+    selected_categories: [ 'LN', 'TN' ]
 
 
 ################## SHEET ČASOVÉ ÚDAJE #################

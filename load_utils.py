@@ -19,7 +19,7 @@ def loadExcel(fname, N):
         print(f'\tLoading sheet "{name}"')
         df_read = pd.read_excel(xlsx, sheet_name=name, usecols=load_columns)
         if df_read.empty:
-            print(f'\tWarning, skipping data in sheet "{name}" as it seems to be empty.')
+            print(f'\t\tWarning, skipping empty sheet "{name}".')
             continue
 
         df_read['Direction'] = combined_index
