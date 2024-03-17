@@ -17,7 +17,12 @@ def loadExcel(fname, N):
     for name, index, direction, combined_index in zip(sheet_names, sheet_names_place_index, sheet_names_place_direction,
                                                       sheet_names_place_combined_index):
         print(f'\tLoading sheet "{name}"')
-        df_read = pd.read_excel(xlsx, sheet_name=name, usecols=load_columns)
+        df_read = pd.read_excel(xlsx, sheet_name=name)
+        if 'Kategorie' not in df_read.columns:
+            print(f'\t\tWarning, sheet "{name}" does not contain column "Kategorie". Vehicle category filtering is limited.')
+            df_read['Kategorie'] = 'Dummy_category'
+        df_read = df_read[load_columns]
+
         if df_read.empty:
             print(f'\t\tWarning, skipping empty sheet "{name}".')
             continue
