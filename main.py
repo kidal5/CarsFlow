@@ -32,6 +32,13 @@ if __name__ == '__main__':
     print('Loading data')
     df = loadExcel(params['input_file'], params['number_of_cameras'])
 
+    print('Dataset info')
+    print(f'\tTotal number of record in all cameras')
+    print(f'\tUnique detected vehicle categories: {df["Vehicle_category"].unique()}')
+    start = df['Capture_time'].min().strftime('%d.%m.%Y %H:%M:%S')
+    end = df['Capture_time'].max().strftime('%d.%m.%Y %H:%M:%S')
+    print(f'\tDetected timespan: {start} -> {end}')
+
     print('Delete previous output file, if present.')
     os.makedirs(Path(params['output_file']).parent, exist_ok=True)
     if osp.isfile(params['output_file']):

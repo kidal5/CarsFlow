@@ -68,7 +68,7 @@ def computeData(df, params, time: TimeStruct, selectedCategories, addDataCheck):
     def createHalfCrossTab(df_in):
         halfcrosstab = df_in.groupby('Direction').count()
         halfcrosstab = halfcrosstab - 1  # remove fake datax;
-        halfcrosstab = halfcrosstab.drop(columns=['Capture_time'])
+        halfcrosstab = halfcrosstab.drop(columns=['Capture_time', 'Vehicle_category'])
         halfcrosstab_to = halfcrosstab[halfcrosstab.index % 2 == 1].T
         halfcrosstab_from = halfcrosstab[halfcrosstab.index % 2 == 0].T
 
