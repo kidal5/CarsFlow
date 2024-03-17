@@ -1,7 +1,8 @@
 from itertools import chain
 import pandas as pd
 
-load_columns = ['License Plate Number', 'Capture Time']
+load_columns = ['License Plate Number', 'Capture Time', 'Kategorie']
+rename_columns = {'License Plate Number': 'License_plate', 'Capture Time': 'Capture_time', 'Kategorie': 'Vehicle_category'}
 
 
 def loadExcel(fname, N):
@@ -15,9 +16,14 @@ def loadExcel(fname, N):
 
     for name, index, direction, combined_index in zip(sheet_names, sheet_names_place_index, sheet_names_place_direction,
                                                       sheet_names_place_combined_index):
+        print(f'\tLoading sheet "{name}"')
         df_read = pd.read_excel(xlsx, sheet_name=name, usecols=load_columns)
+        if df_read.empty:
+            print(f'\tWarning, skipping data in sheet "{name}" as it seems to be empty.')
+            continue
+
         df_read['Direction'] = combined_index
-        df_read = df_read.rename(columns={'License Plate Number': 'License_plate', 'Capture Time': 'Capture_time'})
+        df_read = df_read.rename(columns=rename_columns)
 
         # drop empty rows
         df_read = df_read[~df_read['Capture_time'].isnull()]
@@ -27,8 +33,7 @@ def loadExcel(fname, N):
 
     df = pd.concat(dfs)
     df = df.reset_index(drop=True)
-    df = df.astype({'License_plate': 'str'})
-
+    df = df.astype({'License_plate': 'str', 'Vehicle_category': 'str'})
     return df
 
 

@@ -6,23 +6,29 @@ from TimeStruct import *
 
 
 def createSheetNumberOfCars(df, xlsxWriter, params):
-    def createSheetNumberOfCarsInner(sheet_name_in, time_in: TimeStruct, addDataCheck):
-        data = computeData(df, params, time_in, addDataCheck)
+    def createSheetNumberOfCarsInner(sheet_name_in, time_in: TimeStruct, selectedCategories=None, addDataCheck=True):
+        data = computeData(df, params, time_in, selectedCategories, addDataCheck)
         writeData(xlsxWriter, sheet_name_in, data, params, addDataCheck)
-        writeTemplate(xlsxWriter, sheet_name_in, params, time_in, addDataCheck)
+        writeTemplate(xlsxWriter, sheet_name_in, params, time_in, selectedCategories, addDataCheck)
 
     sheet_name = 'Počty vozidel'
-    createSheetNumberOfCarsInner(sheet_name, TimeStruct.createFromStartAndEndTime('00:00', '23:59', df), True)
+    createSheetNumberOfCarsInner(sheet_name, TimeStruct.createFromStartAndEndTime('00:00', '23:59', df))
 
     for item in params['sheet_cars_count'].values():
         time = TimeStruct.createFromDict(item, df)
-        createSheetNumberOfCarsInner(time.findUnusedSheetName(sheet_name, xlsxWriter), time, True)
+        sc = item.get('selected_categories', [])
+        if len(sc) == 0:
+            sc = None
+
+        createSheetNumberOfCarsInner(time.findUnusedSheetName(sheet_name, xlsxWriter), time, sc, True)
 
 
-def computeData(df, params, time: TimeStruct, addDataCheck=True):
+def computeData(df, params, time: TimeStruct, selectedCategories, addDataCheck):
     # filter time
     df = df.set_index('Capture_time').sort_index()
     df = df[time.dateTimeStart: time.dateTimeEnd]
+    if selectedCategories is not None:
+        df = df[df['Vehicle_category'].isin(selectedCategories)]
     df = df.reset_index()
 
     # compute number of items on every input sheet, for data validation
@@ -179,7 +185,7 @@ def writeData(xlsxWriter, sheet_name, data, params, addDataCheck):
     cond_good = {'type': 'cell', 'criteria': '<>', 'value': 0, 'format': wrong_format}
     cond_wrong = {'type': 'cell', 'criteria': '=', 'value': 0, 'format': good_format}
 
-    # this should not be conditional formatting, but i could not found way hwo to do it properly...
+    # this should not be conditional formatting, but I could not find a way how to do it properly...
     worksheet.conditional_format(5, 2, N * 2 + 4, N * 2 + 1, cond)
     if addDataCheck:
         worksheet.conditional_format(5, N * 2 + 3, N * 2 + 4, N * 2 + 5, cond)
@@ -192,7 +198,7 @@ def writeData(xlsxWriter, sheet_name, data, params, addDataCheck):
     worksheet.conditional_format(5 + N * 2 + 15, 2, 4 + N * 2 + 16, N + 1, cond)
 
 
-def writeTemplate(xlsxWriter, sheet_name, params, time: TimeStruct, addDataCheck):
+def writeTemplate(xlsxWriter, sheet_name, params, time: TimeStruct, selectedCategories, addDataCheck):
     N = params['number_of_cameras']
 
     workbook = xlsxWriter.book
@@ -237,7 +243,8 @@ def writeTemplate(xlsxWriter, sheet_name, params, time: TimeStruct, addDataCheck
 
     # write first and second row
     worksheet.merge_range(0, 0, 0, N * 2 + 1, "Základní výstupní tabulky (počty všech vozidel)", first_line_format)
-    worksheet.merge_range(1, 0, 1, N * 2 + 1, f"Vybraný čas: {time.fullSheetName}", first_line_format)
+    categoriesStr = ", ".join(selectedCategories) if selectedCategories is not None else "Všechny kategorie"
+    worksheet.merge_range(1, 0, 1, N * 2 + 1, f"Vybraný čas: {time.fullSheetName}; Vybrané typy vozidel: {categoriesStr}", first_line_format)
 
     # write third row and first column
     worksheet.write(3, 0, "Sčítací bod", orange_format)

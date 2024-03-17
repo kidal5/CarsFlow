@@ -10,45 +10,53 @@
 ########################################################
 
 ################# INPUT AND OUTPUT FILES ###############
-input_file: 'test/input_2.xlsx'
-output_file: 'out.xlsx'
+input_file: 'test/input_with_categories.xlsx'
+output_file: 'out2.xlsx'
 number_of_cameras: 9 # number of physical cameras, aka measure points 
 
 ################# SHEET POČTY VOZIDEL ###############
 # all day (aka 00:00 -> 23:59) is created by default
 sheet_cars_count: 
-  time_a:
+  output_a:
     dateTime_start: '2.11.2021 - 04:50'
     dateTime_end: '3.11.2021 - 04:50'
 
-  # for more times just add new 'time_x' section
-  time_b: 
+    # keep only rows, whose `Kategorie` value is any of following
+    selected_categories: ['OA', 'BUS', 'LN', 'TN']
+
+  # for more different outputs (with different times or category selectors) just add new 'output_x' section
+  output_b:
     dateTime_start: '6.10.2021 - 00:01'
     dateTime_end: '6.10.2021 - 23:59'
+
+    # when `selected_categories` is omitted or empty, all categories are selected
+    selected_categories: []
+
 
 ################# SHEET POČTY PRŮJEZDŮ ###############
 # all day (aka 00:00 -> 23:59) is created by default
 sheet_number_of_travels:
-  time_a:
+  output_a:
     dateTime_start: '7.10.2021 - 04:50' 
     dateTime_end: '7.10.2021 - 20:21' 
 
-  # for more times just add new 'time_x' section
-  time_b:
+  # for more different outputs (with different times or category selectors) just add new 'output_x' section
+  output_b:
     dateTime_start: '7.10.2021 - 04:50' 
     dateTime_end: '7.10.2021 - 20:21' 
 
 
 ################## SHEET ČASOVÉ ÚDAJE #################
 sheet_times: 
-  time_a: 
+  output_a:
     selected_directions: # full indexing format, aka index 6 corresponds to camera 3 looking backwards
       - 1
       - 3
     dateTime_start: '2.11.2021 - 00:00'
     dateTime_end: '4.11.2021 - 23:59'
 
-  time_b: # for more times just add new 'time_x' section
+  # for more different outputs (with different times, selected directions or category selectors) just add new 'output_x' section
+  output_b:
     selected_directions: 
       - 1
       - 12
