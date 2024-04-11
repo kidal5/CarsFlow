@@ -31,3 +31,8 @@ You can create more ```xxx.yaml``` files and switch between them, no need to hav
   - Added ```vehicle category``` filtering to all sheets
   - Added basic Dataset info (number of records, possible categories, ...) logging 
   - Fixed error in sheet Časové údaje, where time-based filtering were not applied correctly
+
+- 11.04.2024
+  - Added possibility to generate histogram of cars
+  - Pip update is needed - see [https://stackoverflow.com/a/24764570](https://stackoverflow.com/a/24764570)
+
