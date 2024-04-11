@@ -3,3 +3,5 @@ numpy
 pandas
 XlsxWriter
 openpyxl
+matplotlib
+seaborn

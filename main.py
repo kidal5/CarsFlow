@@ -8,6 +8,7 @@ from load_utils import loadExcel
 from sheet_times import createSheetTimes
 from sheet_number_of_travels import createSheetNumberOfTravels
 from sheet_number_of_cars import createSheetNumberOfCars
+from figure_histogram import createHistogram
 
 import argparse
 
@@ -26,7 +27,7 @@ def parseInput():
 
 if __name__ == '__main__':
     args = parseInput()
-    with open(args['paramsFile']) as f:
+    with open(args['paramsFile'], encoding='utf8') as f:
         params = yaml.safe_load(f)
 
     print('Loading data')
@@ -55,3 +56,6 @@ if __name__ == '__main__':
     print('Creating sheet Časové údaje')
     createSheetTimes(df.copy(True), writer, params)
     writer.close()
+
+    print('Creating histograms')
+    createHistogram(df.copy(True), params)

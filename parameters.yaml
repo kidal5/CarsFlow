@@ -85,4 +85,20 @@ sheet_times:
 #    selected_categories: can be omitted to select all categories
     selected_directions: [1,12]
 
-  
+################## HISTOGRAM #################
+figure_histogram:
+  output_a:
+    dateTime_start: '19.9.2023 - 00:00'
+    dateTime_end: '19.9.2023 - 23:59'
+    selected_categories: [ 'OA', 'BUS', 'LN', 'TN' ]
+
+    # graph options
+    scaleAxisY: [0,1200] #either [min, max] or 'auto', default is 'auto'
+    scaleAxisX: 15min # either Xmin, Xh or XD, where X is integer, default is 30min
+                      # f.e. 15min will split X axis into   15-minutes chunks
+                      # f.e. 5h    will split X axis into    5-hours   chunks
+                      # f.e. 0.25D will split X axis into 0.25-days    chunks
+
+    drawBackgroundGrid: True # either True or False, default is True
+    graphTitle: "Můj super název histogramu" # default is 'Histogram počtu průjezdů;
+    filename: "folder/histogram_1.png" # name of file, can be also put into folder using folderName/filename.png
