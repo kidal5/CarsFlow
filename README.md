@@ -34,5 +34,7 @@ You can create more ```xxx.yaml``` files and switch between them, no need to hav
 
 - 11.04.2024
   - Added possibility to generate histogram of cars
-  - Pip update is needed - see [https://stackoverflow.com/a/24764570](https://stackoverflow.com/a/24764570)
-
+  - Pip update is needed
+    - (it is similiar as in First time setup)
+    - Open Command Prompt (cmd) in unpacked folder. (Right click on folder while holding **shift**, select open Command Prompt (Powershell) here.)
+    - Type ```pip install --ignore-installed -r requirements.txt``` into cmd and hit enter.
