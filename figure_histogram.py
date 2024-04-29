@@ -82,10 +82,13 @@ def makePlot(df, filename, freq, yLim, drawBackgroundGrid, graphTitle):
     plt.ylim(yLim)
 
     ax = plt.gca()
-    plt.title(graphTitle, fontsize=30, pad=20)
-    plt.xlabel('Čas průjezdu', fontsize=15)
-    plt.ylabel('Počet průjezdů', fontsize=15)
-    ax.get_legend().set_title("Směr kamery")
+    ax.tick_params(axis='both', labelsize=25)
+    plt.title(graphTitle, fontsize=45, pad=20)
+    plt.xlabel('Čas průjezdu', fontsize=35)
+    plt.ylabel('Počet průjezdů', fontsize=35)
+    ax.get_legend().set_title("Směr")
+    plt.setp(ax.get_legend().get_texts(), fontsize='25')  # for legend text
+    plt.setp(ax.get_legend().get_title(), fontsize='35')  # for legend title
 
     if drawBackgroundGrid:
         ax.set_axisbelow(True)
