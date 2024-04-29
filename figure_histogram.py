@@ -7,12 +7,16 @@ from TimeStruct import *
 
 
 def createHistogram(df, params):
-    def createHistogramInner(filename, time_in: TimeStruct, selectedCategories, freq, yLim, drawBackgroundGrid,
+    def createHistogramInner(filename, selectedDirections, time_in: TimeStruct, selectedCategories, freq, yLim, drawBackgroundGrid,
                              graphTitle):
-        data = computeData(df.copy(True), time_in, selectedCategories)
+        data = computeData(df.copy(True), selectedDirections, time_in, selectedCategories)
         makePlot(data, filename, freq, yLim, drawBackgroundGrid, graphTitle)
 
     for idx, item in enumerate(params['figure_histogram'].values()):
+        selectedDirections = item.get('selected_directions', [])
+        if len(selectedDirections) == 0:
+            selectedDirections = None
+
         time = TimeStruct.createFromDict(item, df)
         sc = item.get('selected_categories', [])
         if len(sc) == 0:
@@ -29,13 +33,17 @@ def createHistogram(df, params):
         filename = pathlib.Path(filename).absolute()
         filename.parent.mkdir(parents=True, exist_ok=True)
 
-        createHistogramInner(filename, time, sc, freq, yLim, drawBackgroundGrid, graphTitle)
+        createHistogramInner(filename, selectedDirections, time, sc, freq, yLim, drawBackgroundGrid, graphTitle)
 
 
-def computeData(df, time: TimeStruct, selectedCategories):
+def computeData(df, selectedDirections, time: TimeStruct, selectedCategories):
     # filter time
     df = df.set_index('Capture_time').sort_index()
     df = df[time.dateTimeStart: time.dateTimeEnd]
+
+    # filter directions
+    if selectedDirections is not None:
+        df = df[df['Direction'].isin(selectedDirections)]
 
     if selectedCategories is not None:
         df = df[df['Vehicle_category'].isin(selectedCategories)]

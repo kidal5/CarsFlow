@@ -91,6 +91,8 @@ figure_histogram:
     dateTime_start: '19.9.2023 - 00:00'
     dateTime_end: '19.9.2023 - 23:59'
     selected_categories: [ 'OA', 'BUS', 'LN', 'TN' ]
+    # selected_categories: can be omitted to select all directions or specify them using [1,7,9, ...] notation
+    selected_directions: [1,2,3,4,5,7,8,9,10]
 
     # graph options
     scaleAxisY: [0,1200] #either [min, max] or 'auto', default is 'auto'
