@@ -96,7 +96,7 @@ figure_histogram:
 
     # graph options
     scaleAxisY: [0,1200] #either [min, max] or 'auto', default is 'auto'
-    scaleAxisX: 15min # either Xmin, Xh or XD, where X is integer, default is 30min
+    scaleAxisX: 15min # either Xmin, Xh or XD, where X is number, default is 30min
                       # f.e. 15min will split X axis into   15-minutes chunks
                       # f.e. 5h    will split X axis into    5-hours   chunks
                       # f.e. 0.25D will split X axis into 0.25-days    chunks

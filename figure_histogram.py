@@ -75,10 +75,26 @@ def makePlot(df, filename, freq, yLim, drawBackgroundGrid, graphTitle):
     df.loc[df["Capture_time"] == df['Capture_time'].min(), "Capture_time"] = mmin
     df.loc[df["Capture_time"] == df['Capture_time'].max(), "Capture_time"] = mmax
 
+    def generateBinNames():
+        # keep long names only for midnight
+        longBins = bins.strftime("%Y-%m-%d %H:%M")
+        shortBins = bins.strftime("%H:%M")
+        outBins = []
+        lastPlacedIndex = 0
+        for idx, (long, short) in enumerate(zip(longBins, shortBins)):
+            if idx == 0 or idx == (len(longBins) - 1) or '00:00' in long:
+                outBins.append(long)
+                lastPlacedIndex = idx
+            elif pd.Timedelta(freq) < pd.Timedelta('30m') and (idx - lastPlacedIndex) % 2 == 1:
+                outBins.append("")
+            else:
+                outBins.append(short)
+        return outBins
+
     plt.figure(figsize=(30, 18))
     sns.histplot(data=df, x='Capture_time', hue='Direction', multiple="stack", palette=makePalette(), stat='count',
                  bins=numBins)
-    plt.xticks(bins, bins.strftime("%Y-%m-%d %H:%M"), rotation='vertical')
+    plt.xticks(bins, generateBinNames(), rotation='vertical')
     plt.ylim(yLim)
 
     ax = plt.gca()
