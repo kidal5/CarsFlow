@@ -111,6 +111,6 @@ def makePlot(df, filename, freq, yLim, drawBackgroundGrid, graphTitle):
         ax.yaxis.grid(color='gray', linestyle='dashed')
         ax.xaxis.grid(color='gray', linestyle='dashed')
 
-    print('\tSaving histogram to file: ', filename)
+    print('\tSaving histogram to file:', filename)
     plt.tight_layout()
     plt.savefig(filename)

@@ -57,5 +57,7 @@ if __name__ == '__main__':
     createSheetTimes(df.copy(True), writer, params)
     writer.close()
 
+    print('Saving generated excel to file:', Path(params['output_file']).absolute())
+
     print('Creating histograms')
     createHistogram(df.copy(True), params)

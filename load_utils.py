@@ -1,11 +1,14 @@
 from itertools import chain
 import pandas as pd
+from pathlib import Path
 
 load_columns = ['License Plate Number', 'Capture Time', 'Kategorie']
 rename_columns = {'License Plate Number': 'License_plate', 'Capture Time': 'Capture_time', 'Kategorie': 'Vehicle_category'}
 
 
 def loadExcel(fname, N):
+    print('\tLoading excel file:', Path(fname).absolute())
+
     xlsx = pd.ExcelFile(fname)
     sheet_names = getSheetNames(N)
     sheet_names_place_index = getSheetNamesPlaceIndexes(N)

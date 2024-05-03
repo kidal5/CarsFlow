@@ -41,6 +41,9 @@ def computeData(df, selectedDirections, time: TimeStruct, selectedCategories):
     temp = temp[time.dateTimeStart: time.dateTimeEnd]
     if selectedCategories is not None:
         temp = temp[temp['Vehicle_category'].isin(selectedCategories)]
+
+    # drop vehicle category column as it is not needed anymore and merging down below does not work
+    temp = temp.drop(columns=['Vehicle_category'], errors='ignore')
     temp = temp.reset_index()
 
     # add fake data to assure that everything goes smoothly
@@ -59,7 +62,6 @@ def computeData(df, selectedDirections, time: TimeStruct, selectedCategories):
         columns={"Capture_time": f"Capture_time_{0}", "Direction": f"Direction_{0}"})
 
     temp_save = temp
-
     for i in range(1, len(selectedDirections)):
         temp_moved = temp_save.copy(deep=True)
         temp_moved['index'] = temp_moved.index - i
